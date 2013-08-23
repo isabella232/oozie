@@ -90,12 +90,10 @@
          <pig.version>${cdh.pig.version}</pig.version>
          <pig.classifier></pig.classifier>
          <sqoop.version>${cdh.sqoop.version}</sqoop.version>
-         <spark.version>${cdh.spark.version}</spark.version>
          <spark.streaming.kafka.version>${cdh.spark.version}</spark.streaming.kafka.version>
          <spark.bagel.version>${cdh.spark.version}</spark.bagel.version>
          <spark.guava.version>${cdh.guava.version}</spark.guava.version>
          <spark.scala.binary.version>${cdh.scala.binary.version}</spark.scala.binary.version>
-         <sqoop.classifier></sqoop.classifier>
          <streaming.version>${hadoop.version}</streaming.version>
          <hadoop.auth.version>${hadoop.version}</hadoop.auth.version>
          <tez.version>0.8.4</tez.version>
@@ -1367,7 +1365,6 @@
                 <groupId>org.apache.sqoop</groupId>
                 <artifactId>sqoop</artifactId>
                 <version>${sqoop.version}</version>
-                <classifier>${sqoop.classifier}</classifier>
             </dependency>
 
             <dependency>
