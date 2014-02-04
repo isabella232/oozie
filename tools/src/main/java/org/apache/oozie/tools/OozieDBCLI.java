@@ -41,6 +41,8 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -708,29 +710,73 @@ public class OozieDBCLI {
         else if (dbVendor.equals("derby")) {
             convertClobToBlobinDerby(conn, startingVersion);
         }
-        System.out.println("Dropping discriminator column");
-        PrintWriter writer = new PrintWriter(new FileWriter(sqlFile, true));
-        writer.println();
-        ArrayList<String> ddlQueries = new ArrayList<String>();
-        ddlQueries.add(getDropColumnQuery("WF_JOBS", DISCRIMINATOR_COLUMN));
-        ddlQueries.add(getDropColumnQuery("WF_ACTIONS", DISCRIMINATOR_COLUMN));
-        ddlQueries.add(getDropColumnQuery("COORD_JOBS", DISCRIMINATOR_COLUMN));
-        ddlQueries.add(getDropColumnQuery("COORD_ACTIONS", DISCRIMINATOR_COLUMN));
-        ddlQueries.add(getDropColumnQuery("BUNDLE_JOBS", DISCRIMINATOR_COLUMN));
-        ddlQueries.add(getDropColumnQuery("BUNDLE_ACTIONS", DISCRIMINATOR_COLUMN));
-        Statement stmt = conn != null ? conn.createStatement() : null;
-        for (String query : ddlQueries) {
-            writer.println(query + ";");
+        // CLOUDERA-BUILD: We backported OOZIE-1463 (which already removes these columns without dropping them) to c5b1; so if
+        // upgrading from c5b1, these columns won't exist if the database was created in c5b1 but will exist if created in c4
+        // and upgraded to c5b1
+        if (discriminatorColumnsExist(conn)) {
+            System.out.println("Dropping discriminator column");
+            PrintWriter writer = new PrintWriter(new FileWriter(sqlFile, true));
+            writer.println();
+            ArrayList<String> ddlQueries = new ArrayList<String>();
+            ddlQueries.add(getDropColumnQuery("WF_JOBS", DISCRIMINATOR_COLUMN));
+            ddlQueries.add(getDropColumnQuery("WF_ACTIONS", DISCRIMINATOR_COLUMN));
+            ddlQueries.add(getDropColumnQuery("COORD_JOBS", DISCRIMINATOR_COLUMN));
+            ddlQueries.add(getDropColumnQuery("COORD_ACTIONS", DISCRIMINATOR_COLUMN));
+            ddlQueries.add(getDropColumnQuery("BUNDLE_JOBS", DISCRIMINATOR_COLUMN));
+            ddlQueries.add(getDropColumnQuery("BUNDLE_ACTIONS", DISCRIMINATOR_COLUMN));
+            Statement stmt = conn != null ? conn.createStatement() : null;
+            for (String query : ddlQueries) {
+                writer.println(query + ";");
+                if (run) {
+                    stmt.executeUpdate(query);
+                }
+            }
+            System.out.println("DONE");
+            writer.close();
             if (run) {
-                stmt.executeUpdate(query);
+                stmt.close();
             }
         }
-        System.out.println("DONE");
-        writer.close();
         if (run) {
-            stmt.close();
             conn.close();
         }
+    }
+
+    private boolean discriminatorColumnsExist(Connection conn) throws Exception {
+        boolean exist = false;
+        boolean shouldCloseConnection = false;
+        try {
+            if (conn == null) {
+                shouldCloseConnection = true;
+                conn = createConnection();
+            }
+            Statement st = conn.createStatement();
+            try {
+                ResultSet rs = st.executeQuery("SELECT * FROM WF_JOBS");
+                if (rs != null) {
+                    ResultSetMetaData metadata = rs.getMetaData();
+                    int columnCount = metadata.getColumnCount();
+
+                    for (int i = 1; i <= columnCount && !exist; i++) {
+                      String columnName = metadata.getColumnName(i);
+                      if (columnName.equalsIgnoreCase(DISCRIMINATOR_COLUMN)) {
+                          exist = true;
+                      }
+                    }
+                    rs.close();
+                }
+            }
+            catch (SQLException e) {
+                // nop
+            }
+            st.close();
+        }
+        finally {
+            if (shouldCloseConnection) {
+                conn.close();
+            }
+        }
+        return exist;
     }
 
     private Map<String, List<String>> getTableClobColumnMap() {
