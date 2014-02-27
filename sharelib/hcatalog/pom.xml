@@ -137,14 +137,6 @@
                 </exclusion>
                 <exclusion>
                     <groupId>org.datanucleus</groupId>
-                    <artifactId>datanucleus-core</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.datanucleus</groupId>
-                    <artifactId>datanucleus-rdbms</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.datanucleus</groupId>
                     <artifactId>datanucleus-enhancer</artifactId>
                 </exclusion>
                 <exclusion>
