@@ -918,6 +918,13 @@
             </dependency>
 
             <dependency>
+                <groupId>org.apache.pig</groupId>
+                <artifactId>piggybank</artifactId>
+                <version>${pig.version}</version>
+                <classifier>${pig.classifier}</classifier>
+            </dependency>
+
+            <dependency>
                 <groupId>jline</groupId>
                 <artifactId>jline</artifactId>
                 <version>${jline.version}</version>
