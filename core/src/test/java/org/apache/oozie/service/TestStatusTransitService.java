@@ -487,7 +487,6 @@ public class TestStatusTransitService extends XDataTestCase {
         assertEquals(Job.Status.PREP, coordJob1.getStatus());
     }
 
-
     /**
      * Test : all coord actions are running, job pending is reset
      *
