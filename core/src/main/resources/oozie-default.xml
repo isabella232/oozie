@@ -2531,6 +2531,15 @@
     </property>
 
     <property>
+        <name>oozie.use.system.libpath</name>
+        <value>false</value>
+        <description>
+            Default value of oozie.use.system.libpath. If user haven't specified =oozie.use.system.libpath=
+            in the job.properties and this value is true and Oozie will include sharelib jars for workflow.
+        </description>
+    </property>
+
+    <property>
         <name>oozie.service.PauseTransitService.callable.batch.size
         </name>
         <value>10</value>
