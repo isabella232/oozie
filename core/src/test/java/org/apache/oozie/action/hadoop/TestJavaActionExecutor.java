@@ -1412,7 +1412,7 @@ public class TestJavaActionExecutor extends ActionExecutorTestCase {
 
         WorkflowAppService wps = Services.get().get(WorkflowAppService.class);
 
-        Path systemLibPath = new Path(wps.getSystemLibPath(), ShareLibService.SHARED_LIB_PREFIX
+        Path systemLibPath = new Path(wps.getSystemLibPath(), ShareLibService.SHARE_LIB_PREFIX
                 + new SimpleDateFormat("yyyyMMddHHmmss").format(new Date()).toString());
 
         Path javaShareLibPath = new Path(systemLibPath, "java");
@@ -1527,7 +1527,7 @@ public class TestJavaActionExecutor extends ActionExecutorTestCase {
         new Services().init();
         // Create the dir
         WorkflowAppService wps = Services.get().get(WorkflowAppService.class);
-        Path systemLibPath = new Path(wps.getSystemLibPath(), ShareLibService.SHARED_LIB_PREFIX
+        Path systemLibPath = new Path(wps.getSystemLibPath(), ShareLibService.SHARE_LIB_PREFIX
                 + new SimpleDateFormat("yyyyMMddHHmmss").format(new Date()).toString());
         Path javaShareLibPath = new Path(systemLibPath, "java-action-executor");
         getFileSystem().mkdirs(javaShareLibPath);
@@ -1536,7 +1536,7 @@ public class TestJavaActionExecutor extends ActionExecutorTestCase {
         JobConf conf = ae.createBaseHadoopConf(context, eActionXml);
         // Despite systemLibPath is not fully qualified and the action refers to the
         // second namenode the next line won't throw exception because default fs is used
-        ae.addShareLib(conf, new String[]{"java-action-executor"});
+        ae.addShareLib(conf, new String[] { "java-action-executor" });
 
         // Set sharelib to a full path (i.e. include scheme and authority)
         Services.get().destroy();
@@ -1545,7 +1545,7 @@ public class TestJavaActionExecutor extends ActionExecutorTestCase {
         Services.get().setService(ShareLibService.class);
         conf = ae.createBaseHadoopConf(context, eActionXml);
         // The next line should not throw an Exception because it will get the scheme and authority from the sharelib path
-        ae.addShareLib(conf, new String[]{"java-action-executor"});
+        ae.addShareLib(conf, new String[] { "java-action-executor" });
     }
 
     public void testFilesystemScheme() throws Exception {
@@ -2528,7 +2528,7 @@ public class TestJavaActionExecutor extends ActionExecutorTestCase {
 
         WorkflowAppService wps = Services.get().get(WorkflowAppService.class);
 
-        Path systemLibPath = new Path(wps.getSystemLibPath(), ShareLibService.SHARED_LIB_PREFIX
+        Path systemLibPath = new Path(wps.getSystemLibPath(), ShareLibService.SHARE_LIB_PREFIX
                 + new SimpleDateFormat("yyyyMMddHHmmss").format(new Date()).toString());
 
         File jarFile = IOUtils.createJar(new File(getTestCaseDir()), "sourcejar.jar", LauncherMainTester.class);
