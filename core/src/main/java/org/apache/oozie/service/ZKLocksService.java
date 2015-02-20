@@ -32,7 +32,7 @@ import org.apache.oozie.util.ZKUtils;
 import java.io.IOException;
 import java.util.concurrent.ScheduledExecutorService;
 
-import org.apache.curator.framework.recipes.locks.ChildReaper;
+import org.apache.oozie.util.ChildReaper;
 import org.apache.curator.framework.recipes.locks.Reaper;
 import org.apache.curator.utils.ThreadUtils;
 
