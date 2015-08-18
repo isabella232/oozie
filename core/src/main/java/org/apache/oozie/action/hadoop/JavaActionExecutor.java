@@ -28,6 +28,7 @@ import java.net.ConnectException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -96,6 +97,7 @@ public class JavaActionExecutor extends ActionExecutor {
     public static final String ACL_VIEW_JOB = "mapreduce.job.acl-view-job";
     public static final String ACL_MODIFY_JOB = "mapreduce.job.acl-modify-job";
     public static final String HADOOP_YARN_UBER_MODE = "mapreduce.job.ubertask.enable";
+    public static final String HADOOP_YARN_KILL_CHILD_JOBS_ON_AMRESTART = "oozie.action.launcher.am.restart.kill.childjobs";
     public static final String HADOOP_MAP_MEMORY_MB = "mapreduce.map.memory.mb";
     public static final String HADOOP_CHILD_JAVA_OPTS = "mapred.child.java.opts";
     public static final String HADOOP_MAP_JAVA_OPTS = "mapreduce.map.java.opts";
@@ -805,7 +807,13 @@ public class JavaActionExecutor extends ActionExecutor {
             }
 
             // Properties for when a launcher job's AM gets restarted
-            LauncherMapperHelper.setupYarnRestartHandling(launcherJobConf, actionConf, launcherTag);
+            if (ConfigurationService.getBoolean(HADOOP_YARN_KILL_CHILD_JOBS_ON_AMRESTART)) {
+                LauncherMapperHelper.setupYarnRestartHandling(launcherJobConf, actionConf, launcherTag);
+            }
+            else {
+                LOG.info(MessageFormat.format("{0} is set to false, not setting YARN restart properties",
+                        HADOOP_YARN_KILL_CHILD_JOBS_ON_AMRESTART));
+            }
 
             String actionShareLibProperty = actionConf.get(ACTION_SHARELIB_FOR + getType());
             if (actionShareLibProperty != null) {
