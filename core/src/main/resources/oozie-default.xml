@@ -1896,7 +1896,7 @@ will be the requeue interval for the actions which are waiting for a long time w
 
     <property>
         <name>oozie.action.shell.setup.hadoop.conf.dir</name>
-        <value>false</value>
+        <value>true</value>
         <description>
             The Shell action is commonly used to run programs that rely on HADOOP_CONF_DIR (e.g. hive, beeline, sqoop, etc).  With
             YARN, HADOO_CONF_DIR is set to the NodeManager's copies of Hadoop's *-site.xml files, which can be problematic because
