@@ -137,7 +137,7 @@ public class ShellMain extends LauncherMain {
      * @throws IOException in case of error
      */
     private void prepareHadoopConfigs(Configuration actionConf, Map<String, String> envp, File currDir) throws IOException {
-        if (actionConf.getBoolean(CONF_OOZIE_SHELL_SETUP_HADOOP_CONF_DIR, false)) {
+        if (actionConf.getBoolean(CONF_OOZIE_SHELL_SETUP_HADOOP_CONF_DIR, true)) {
             String actionXml = envp.get(OOZIE_ACTION_CONF_XML);
             if (actionXml != null) {
                 File confDir = new File(currDir, "oozie-hadoop-conf-" + System.currentTimeMillis());
