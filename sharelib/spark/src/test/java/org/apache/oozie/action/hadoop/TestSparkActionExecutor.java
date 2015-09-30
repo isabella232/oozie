@@ -137,6 +137,10 @@ public class TestSparkActionExecutor extends ActionExecutorTestCase {
         sparkOpts.putAll(defaultSparkOpts);
         final String configSparkOpts = conf.get("oozie.spark.spark-opts");
         int count = 0;
+        // CLOUDERA-BUILD: Tell Spark not to localize Hadoop Configs to fix regression on kerberized cluster (CDH-32176)
+        if (master.startsWith("yarn")) {
+            sparkOpts.put("spark.yarn.localizeConfig", "false");
+        }
         Matcher m = SPARK_OPTS_PATTERN.matcher(configSparkOpts);
         while (m.find()) {
             count++;
