@@ -305,6 +305,16 @@
             <artifactId>oozie-sharelib-oozie</artifactId>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>org.kitesdk</groupId>
+            <artifactId>kite-data-mapreduce</artifactId>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.kitesdk</groupId>
+            <artifactId>kite-data-hive</artifactId>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
 
     <build>
