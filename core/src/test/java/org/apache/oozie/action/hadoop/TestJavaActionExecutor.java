@@ -181,11 +181,17 @@ public class TestJavaActionExecutor extends ActionExecutorTestCase {
         OutputStream os = getFileSystem().create(new Path(getFsTestCaseDir(), "job.xml"));
         conf.writeXml(os);
         os.close();
+        os = getFileSystem().create(new Path(getFsTestCaseDir(), new Path("app", "job.xml")));
+        conf.writeXml(os);
+        os.close();
 
         conf = new XConfiguration();
         conf.set("e", "E");
         conf.set("oozie.launcher.f", "F");
         os = getFileSystem().create(new Path(getFsTestCaseDir(), "job2.xml"));
+        conf.writeXml(os);
+        os.close();
+        os = getFileSystem().create(new Path(getFsTestCaseDir(), new Path("app", "job2.xml")));
         conf.writeXml(os);
         os.close();
 
@@ -199,8 +205,10 @@ public class TestJavaActionExecutor extends ActionExecutorTestCase {
         assertEquals("LA", conf.get("oozie.launcher.a"));
         assertEquals("LA", conf.get("a"));
         assertNull(conf.get("b"));
-        assertNull(conf.get("oozie.launcher.d"));
-        assertNull(conf.get("d"));
+        assertEquals("D", conf.get("oozie.launcher.d"));
+        assertEquals("D", conf.get("d"));
+        assertEquals("F", conf.get("oozie.launcher.f"));
+        assertEquals("F", conf.get("f"));
         assertNull(conf.get("action.foo"));
         assertEquals("action.barbar", conf.get("action.foofoo"));
 
@@ -211,8 +219,10 @@ public class TestJavaActionExecutor extends ActionExecutorTestCase {
         assertEquals("BB", conf.get("b"));
         assertEquals("C", conf.get("c"));
         assertEquals("D", conf.get("oozie.launcher.d"));
+        assertNull(conf.get("d"));
         assertEquals("E", conf.get("e"));
         assertEquals("F", conf.get("oozie.launcher.f"));
+        assertNull(conf.get("f"));
         assertEquals("action.bar", conf.get("action.foo"));
 
         conf = ae.createBaseHadoopConf(context, actionXml);
@@ -1173,7 +1183,7 @@ public class TestJavaActionExecutor extends ActionExecutorTestCase {
 
     public void testJavaOpts() throws Exception {
         String actionXml = "<java>" + "<job-tracker>" + getJobTrackerUri() + "</job-tracker>" + "<name-node>"
-                + getNameNodeUri() + "</name-node>" + "<job-xml>job.xml</job-xml>" + "<job-xml>job2.xml</job-xml>"
+                + getNameNodeUri() + "</name-node>"
                 + "<configuration>" + "<property><name>oozie.launcher.a</name><value>LA</value></property>"
                 + "<property><name>a</name><value>AA</value></property>"
                 + "<property><name>b</name><value>BB</value></property>" + "</configuration>"
@@ -1204,7 +1214,7 @@ public class TestJavaActionExecutor extends ActionExecutorTestCase {
         }
 
         actionXml = "<java>" + "<job-tracker>" + getJobTrackerUri() + "</job-tracker>" + "<name-node>"
-                + getNameNodeUri() + "</name-node>" + "<job-xml>job.xml</job-xml>" + "<job-xml>job2.xml</job-xml>"
+                + getNameNodeUri() + "</name-node>"
                 + "<configuration>" + "<property><name>oozie.launcher.a</name><value>LA</value></property>"
                 + "<property><name>a</name><value>AA</value></property>"
                 + "<property><name>b</name><value>BB</value></property>" + "</configuration>"
@@ -1234,7 +1244,7 @@ public class TestJavaActionExecutor extends ActionExecutorTestCase {
         }
 
         actionXml = "<java>" + "<job-tracker>" + getJobTrackerUri() + "</job-tracker>" + "<name-node>"
-                + getNameNodeUri() + "</name-node>" + "<job-xml>job.xml</job-xml>" + "<job-xml>job2.xml</job-xml>"
+                + getNameNodeUri() + "</name-node>"
                 + "<configuration>" + "<property><name>oozie.launcher.a</name><value>LA</value></property>"
                 + "<property><name>a</name><value>AA</value></property>"
                 + "<property><name>b</name><value>BB</value></property>"
@@ -1261,7 +1271,7 @@ public class TestJavaActionExecutor extends ActionExecutorTestCase {
         assertEquals("JAVA-OPT3 JAVA-OPT1 JAVA-OPT2", conf.get("mapreduce.map.java.opts"));
 
         actionXml = "<java>" + "<job-tracker>" + getJobTrackerUri() + "</job-tracker>" + "<name-node>"
-                + getNameNodeUri() + "</name-node>" + "<job-xml>job.xml</job-xml>" + "<job-xml>job2.xml</job-xml>"
+                + getNameNodeUri() + "</name-node>"
                 + "<configuration>" + "<property><name>oozie.launcher.a</name><value>LA</value></property>"
                 + "<property><name>a</name><value>AA</value></property>"
                 + "<property><name>b</name><value>BB</value></property>"
@@ -1293,7 +1303,7 @@ public class TestJavaActionExecutor extends ActionExecutorTestCase {
         }
 
         actionXml = "<java>" + "<job-tracker>" + getJobTrackerUri() + "</job-tracker>" + "<name-node>"
-                + getNameNodeUri() + "</name-node>" + "<job-xml>job.xml</job-xml>" + "<job-xml>job2.xml</job-xml>"
+                + getNameNodeUri() + "</name-node>"
                 + "<configuration>" + "<property><name>oozie.launcher.a</name><value>LA</value></property>"
                 + "<property><name>a</name><value>AA</value></property>"
                 + "<property><name>b</name><value>BB</value></property>"
@@ -1331,8 +1341,7 @@ public class TestJavaActionExecutor extends ActionExecutorTestCase {
         getFileSystem().create(jar2Path).close();
 
         String actionXml = "<java>" + "<job-tracker>" + getJobTrackerUri() + "</job-tracker>" +
-                "<name-node>" + getNameNodeUri() + "</name-node>" +
-                "<job-xml>job.xml</job-xml>" + "<job-xml>job2.xml</job-xml>" + "<configuration>" +
+                "<name-node>" + getNameNodeUri() + "</name-node>" + "<configuration>" +
                 "<property><name>oozie.launcher.oozie.libpath</name><value>" + actionLibPath + "</value></property>" +
                 "</configuration>" + "<main-class>MAIN-CLASS</main-class>" +
                 "</java>";
@@ -1355,8 +1364,7 @@ public class TestJavaActionExecutor extends ActionExecutorTestCase {
         getFileSystem().create(jar3Path).close();
 
         actionXml = "<java>" + "<job-tracker>" + getJobTrackerUri() + "</job-tracker>" +
-                "<name-node>" + getNameNodeUri() + "</name-node>" +
-                "<job-xml>job.xml</job-xml>" + "<job-xml>job2.xml</job-xml>" + "<configuration>" +
+                "<name-node>" + getNameNodeUri() + "</name-node>" + "<configuration>" +
                 "<property><name>oozie.launcher.oozie.libpath</name><value>" + jar3Path + "</value></property>" +
                 "</configuration>" + "<main-class>MAIN-CLASS</main-class>" +
                 "</java>";
@@ -1375,8 +1383,7 @@ public class TestJavaActionExecutor extends ActionExecutorTestCase {
 
         // Test adding a directory and a file (comma separated)
         actionXml = "<java>" + "<job-tracker>" + getJobTrackerUri() + "</job-tracker>" +
-                "<name-node>" + getNameNodeUri() + "</name-node>" +
-                "<job-xml>job.xml</job-xml>" + "<job-xml>job2.xml</job-xml>" + "<configuration>" +
+                "<name-node>" + getNameNodeUri() + "</name-node>" + "<configuration>" +
                 "<property><name>oozie.launcher.oozie.libpath</name><value>" + actionLibPath + "," + jar3Path +
                 "</value></property>" +
                 "</configuration>" + "<main-class>MAIN-CLASS</main-class>" +
@@ -1426,7 +1433,6 @@ public class TestJavaActionExecutor extends ActionExecutorTestCase {
 
         String actionXml = "<java>" + "<job-tracker>" + getJobTrackerUri() + "</job-tracker>" +
                 "<name-node>" + getNameNodeUri() + "</name-node>" +
-                "<job-xml>job.xml</job-xml>" + "<job-xml>job2.xml</job-xml>" +
                 "<main-class>MAIN-CLASS</main-class>" +
                 "</java>";
         Element eActionXml = XmlUtils.parseXml(actionXml);
@@ -1752,6 +1758,38 @@ public class TestJavaActionExecutor extends ActionExecutorTestCase {
         assertEquals("v5", conf.get("p5"));
         assertEquals("v6", conf.get("p6"));
         assertEquals("test", conf.get("user"));
+    }
+
+    public void testJobXmlWithOozieLauncher() throws Exception {
+        String str = "<java>"
+                + "<job-xml>job.xml</job-xml>"
+                + "<configuration>"
+                + "<property><name>oozie.launcher.p2</name><value>v2b</value></property>"
+                + "<property><name>p4</name><value>v4</value></property>"
+                + "</configuration>"
+                + "</java>";
+        Element xml = XmlUtils.parseXml(str);
+        Path appPath = new Path(getFsTestCaseDir(), "app");
+        getFileSystem().mkdirs(appPath);
+
+        XConfiguration jConf = new XConfiguration();
+        jConf.set("oozie.launcher.p1", "v1");
+        jConf.set("oozie.launcher.p2", "v2a");
+        jConf.set("p3", "v3");
+        OutputStream os = getFileSystem().create(new Path(appPath, "job.xml"));
+        jConf.writeXml(os);
+        os.close();
+
+        Configuration conf = new XConfiguration();
+        assertEquals(0, conf.size());
+        JavaActionExecutor jae = new JavaActionExecutor("java");
+        jae.setupLauncherConf(conf, xml, appPath, createContext("<java/>", null));
+        assertEquals(5, conf.size());
+        assertEquals("true", conf.get("mapreduce.job.ubertask.enable"));
+        assertEquals("v1", conf.get("oozie.launcher.p1"));
+        assertEquals("v1", conf.get("p1"));
+        assertEquals("v2b", conf.get("oozie.launcher.p2"));
+        assertEquals("v2b", conf.get("p2"));
     }
 
     public void testInjectLauncherUseUberMode() throws Exception {
