@@ -1784,8 +1784,9 @@ public class TestJavaActionExecutor extends ActionExecutorTestCase {
         assertEquals(0, conf.size());
         JavaActionExecutor jae = new JavaActionExecutor("java");
         jae.setupLauncherConf(conf, xml, appPath, createContext("<java/>", null));
-        assertEquals(5, conf.size());
-        assertEquals("true", conf.get("mapreduce.job.ubertask.enable"));
+        assertEquals(4, conf.size());
+        // CLOUDERA-BUILD: This is now not set by default
+        //assertEquals("true", conf.get("mapreduce.job.ubertask.enable"));
         assertEquals("v1", conf.get("oozie.launcher.p1"));
         assertEquals("v1", conf.get("p1"));
         assertEquals("v2b", conf.get("oozie.launcher.p2"));
@@ -1793,6 +1794,11 @@ public class TestJavaActionExecutor extends ActionExecutorTestCase {
     }
 
     public void testInjectLauncherUseUberMode() throws Exception {
+        // CLOUDERA-BUILD: This is now "false" by default, so adjust it for the test
+        assertFalse(ConfigurationService.getBoolean("oozie.action.launcher.mapreduce.job.ubertask.enable"));
+        ConfigurationService.setBoolean("oozie.action.launcher.mapreduce.job.ubertask.enable", true);
+        assertTrue(ConfigurationService.getBoolean("oozie.action.launcher.mapreduce.job.ubertask.enable"));
+
         // default -- should set to true
         JavaActionExecutor jae = new JavaActionExecutor();
         Configuration conf = new Configuration(false);
@@ -1898,6 +1904,10 @@ public class TestJavaActionExecutor extends ActionExecutorTestCase {
     }
 
     public void testUpdateConfForJavaTmpDir() throws Exception {
+        // CLOUDERA-BUILD: This is now "false" by default, so adjust it for the test
+        assertFalse(ConfigurationService.getBoolean("oozie.action.launcher.mapreduce.job.ubertask.enable"));
+        ConfigurationService.setBoolean("oozie.action.launcher.mapreduce.job.ubertask.enable", true);
+        assertTrue(ConfigurationService.getBoolean("oozie.action.launcher.mapreduce.job.ubertask.enable"));
 
         //Test UpdateCOnfForJavaTmpDir for launcherConf
         String actionXml1 = "<java>"
@@ -1969,6 +1979,11 @@ public class TestJavaActionExecutor extends ActionExecutorTestCase {
         }
     }
     public void testUpdateConfForUberMode() throws Exception {
+        // CLOUDERA-BUILD: This is now "false" by default, so adjust it for the test
+        assertFalse(ConfigurationService.getBoolean("oozie.action.launcher.mapreduce.job.ubertask.enable"));
+        ConfigurationService.setBoolean("oozie.action.launcher.mapreduce.job.ubertask.enable", true);
+        assertTrue(ConfigurationService.getBoolean("oozie.action.launcher.mapreduce.job.ubertask.enable"));
+
         Element actionXml1 = XmlUtils
                 .parseXml("<java>"
                         + "<job-tracker>"
@@ -2092,6 +2107,11 @@ public class TestJavaActionExecutor extends ActionExecutorTestCase {
     }
 
     public void testUpdateConfForUberModeWithEnvDup() throws Exception {
+        // CLOUDERA-BUILD: This is now "false" by default, so adjust it for the test
+        assertFalse(ConfigurationService.getBoolean("oozie.action.launcher.mapreduce.job.ubertask.enable"));
+        ConfigurationService.setBoolean("oozie.action.launcher.mapreduce.job.ubertask.enable", true);
+        assertTrue(ConfigurationService.getBoolean("oozie.action.launcher.mapreduce.job.ubertask.enable"));
+
         Element actionXml1 = XmlUtils.parseXml("<java>" + "<job-tracker>" + getJobTrackerUri() + "</job-tracker>"
                 + "<name-node>" + getNameNodeUri() + "</name-node>" + "<configuration>"
                 + "<property><name>oozie.launcher.yarn.app.mapreduce.am.env</name>"
@@ -2158,6 +2178,11 @@ public class TestJavaActionExecutor extends ActionExecutorTestCase {
     }
 
     public void testUpdateConfForUberModeForJavaOpts() throws Exception {
+        // CLOUDERA-BUILD: This is now "false" by default, so adjust it for the test
+        assertFalse(ConfigurationService.getBoolean("oozie.action.launcher.mapreduce.job.ubertask.enable"));
+        ConfigurationService.setBoolean("oozie.action.launcher.mapreduce.job.ubertask.enable", true);
+        assertTrue(ConfigurationService.getBoolean("oozie.action.launcher.mapreduce.job.ubertask.enable"));
+
         Element actionXml1 = XmlUtils
                 .parseXml("<java>"
                         + "<job-tracker>"
@@ -2283,6 +2308,11 @@ public class TestJavaActionExecutor extends ActionExecutorTestCase {
     }
 
     public void testDisableUberForProperties() throws Exception {
+        // CLOUDERA-BUILD: This is now "false" by default, so adjust it for the test
+        assertFalse(ConfigurationService.getBoolean("oozie.action.launcher.mapreduce.job.ubertask.enable"));
+        ConfigurationService.setBoolean("oozie.action.launcher.mapreduce.job.ubertask.enable", true);
+        assertTrue(ConfigurationService.getBoolean("oozie.action.launcher.mapreduce.job.ubertask.enable"));
+
         Element actionXml1 = XmlUtils.parseXml("<java>" + "<job-tracker>" + getJobTrackerUri() + "</job-tracker>"
                 + "<name-node>" + getNameNodeUri() + "</name-node>"
                 + "<configuration>"
@@ -2639,11 +2669,12 @@ public class TestJavaActionExecutor extends ActionExecutorTestCase {
         assertEquals("AA", conf.get("a"));
         assertEquals("action.barbar", conf.get("oozie.launcher.action.foofoo"));
         assertEquals("action.barbar", conf.get("action.foofoo"));
-        assertEquals("true", conf.get("mapreduce.job.ubertask.enable"));
-        if (conf.size() == 7) {
+        // CLOUDERA-BUILD: This is now not set by default
+        //assertEquals("true", conf.get("mapreduce.job.ubertask.enable"));
+        if (conf.size() == 6) {
             assertEquals(getJobTrackerUri(), conf.get("mapreduce.jobtracker.address"));
         } else {
-            assertEquals(6, conf.size());
+            assertEquals(5, conf.size());
         }
 
         conf = new Configuration(false);
@@ -2653,11 +2684,12 @@ public class TestJavaActionExecutor extends ActionExecutorTestCase {
         assertEquals(getJobTrackerUri(), conf.get("mapred.job.tracker"));
         assertEquals("action.barbar", conf.get("oozie.launcher.action.foofoo"));
         assertEquals("action.barbar", conf.get("action.foofoo"));
-        assertEquals("true", conf.get("mapreduce.job.ubertask.enable"));
-        if (conf.size() == 5) {
+        // CLOUDERA-BUILD: This is now not set by default
+        //assertEquals("true", conf.get("mapreduce.job.ubertask.enable"));
+        if (conf.size() == 4) {
             assertEquals(getJobTrackerUri(), conf.get("mapreduce.jobtracker.address"));
         } else {
-            assertEquals(4, conf.size());
+            assertEquals(3, conf.size());
         }
     }
 }
