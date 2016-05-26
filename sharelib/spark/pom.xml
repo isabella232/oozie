@@ -384,6 +384,39 @@
                             <outputFile>${project.build.directory}/test-classes/mrapp-generated-classpath</outputFile>
                         </configuration>
                     </execution>
+                    <!-- We have to download the PySpark zip dependencies this way instead of the standard <dependency> way so we
+                    can rename them because PySpark has the names hardcoded. -->
+                    <execution>
+                        <id>pyspark-dependency</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>org.apache.spark</groupId>
+                                    <artifactId>spark-assembly_2.10</artifactId>
+                                    <classifier>pyspark</classifier>
+                                    <version>${spark.version}</version>
+                                    <type>zip</type>
+                                    <overWrite>true</overWrite>
+                                    <outputDirectory>${project.build.directory}/partial-sharelib/share/lib/spark</outputDirectory>
+                                    <destFileName>pyspark.zip</destFileName>   <!-- PySpark needs it to be named this -->
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.apache.spark</groupId>
+                                    <artifactId>spark-assembly_2.10</artifactId>
+                                    <classifier>py4j</classifier>
+                                    <version>${spark.version}</version>
+                                    <type>zip</type>
+                                    <overWrite>true</overWrite>
+                                    <outputDirectory>${project.build.directory}/partial-sharelib/share/lib/spark</outputDirectory>
+                                    <destFileName>py4j-0.9-src.zip</destFileName>   <!-- PySpark needs it to be named this -->
+                                </artifactItem>
+                            </artifactItems>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
             <plugin>
