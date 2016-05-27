@@ -394,4 +394,9 @@ public class ActionStartXCommand extends ActionXCommand<org.apache.oozie.command
         }
     }
 
+    @Override
+    protected void queueCommandForTransientFailure(long retryDelayMillis){
+        queue(new ActionStartXCommand(wfAction.getId(), wfAction.getType()), retryDelayMillis);
+    }
+
 }
