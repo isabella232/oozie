@@ -749,7 +749,7 @@ public class TestCoordActionInputCheckXCommand extends XDataTestCase {
         long timeOutCreationTime = System.currentTimeMillis() - (12 * 60 * 1000);
         setCoordActionCreationTime(actionId, timeOutCreationTime);
         new CoordActionInputCheckXCommand(actionId, actionId.substring(0, actionId.indexOf("@"))).call();
-        Thread.sleep(100);
+        checkCoordActionStatus(actionId,  CoordinatorAction.Status.TIMEDOUT);
         checkCoordAction(actionId, missingDeps, CoordinatorAction.Status.TIMEDOUT);
     }
 
@@ -775,7 +775,7 @@ public class TestCoordActionInputCheckXCommand extends XDataTestCase {
         catch (Exception e) {
             assertTrue(e.getMessage().contains("No FileSystem for scheme"));
         }
-        Thread.sleep(100);
+        checkCoordActionStatus(actionId,  CoordinatorAction.Status.TIMEDOUT);
         checkCoordAction(actionId, missingDeps, CoordinatorAction.Status.TIMEDOUT);
     }
 
