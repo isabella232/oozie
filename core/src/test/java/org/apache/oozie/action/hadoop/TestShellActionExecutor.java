@@ -102,7 +102,7 @@ public class TestShellActionExecutor extends ActionExecutorTestCase {
         assertEquals("a=A", conf.get("oozie.shell.args.0"));
         assertEquals("b=B", conf.get("oozie.shell.args.1"));
         assertEquals("Expected HADOOP_CONF_DIR setup switch to be disabled",
-                "false", conf.get("oozie.action.shell.setup.hadoop.conf.dir"));
+                "true", conf.get("oozie.action.shell.setup.hadoop.conf.dir"));
         assertEquals("Expected log4j.properties write switch to be enabled",
                 "true", conf.get("oozie.action.shell.setup.hadoop.conf.dir.write.log4j.properties"));
         assertNotNull("Expected a default config to exist for log4j.properties",

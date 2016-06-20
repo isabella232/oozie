@@ -32,6 +32,14 @@ import org.apache.oozie.util.XConfiguration;
 
 public class TestShellMain extends ShellTestCase {
 
+    private static final String LOG4J_PROPERTIES =
+            "log4j.rootLogger=${hadoop.root.logger}\n" +
+            "hadoop.root.logger=INFO,console\n" +
+            "log4j.appender.console=org.apache.log4j.ConsoleAppender\n" +
+            "log4j.appender.console.target=System.err\n" +
+            "log4j.appender.console.layout=org.apache.log4j.PatternLayout\n" +
+            "log4j.appender.console.layout.ConversionPattern=%d{yy/MM/dd HH:mm:ss} %p %c{2}: %m%n";
+
     @Override
     public Void call() throws Exception {
         File script = new File(getTestCaseDir(), scriptName);
@@ -49,6 +57,7 @@ public class TestShellMain extends ShellTestCase {
         jobConf.setInt("mapred.reduce.max.attempts", 1);
         jobConf.set("mapred.job.tracker", getJobTrackerUri());
         jobConf.set("fs.default.name", getNameNodeUri());
+        jobConf.set(ShellMain.CONF_OOZIE_SHELL_SETUP_HADOOP_CONF_DIR_LOG4J_CONTENT, LOG4J_PROPERTIES);
 
 
         jobConf.set(ShellMain.CONF_OOZIE_SHELL_EXEC, SHELL_COMMAND_NAME);
