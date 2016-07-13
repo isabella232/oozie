@@ -28,8 +28,6 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.io.OutputStream;
-import java.io.FileOutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.security.Permission;
@@ -149,6 +147,7 @@ public class LauncherMapper<K1, V1, K2, V2> implements Mapper<K1, V1, K2, V2>, R
 
     @Override
     public void map(K1 key, V1 value, OutputCollector<K2, V2> collector, Reporter reporter) throws IOException {
+        SecurityManager initialSecurityManager = System.getSecurityManager();
         try {
             if (configFailure) {
                 throw configureFailureEx;
@@ -162,7 +161,6 @@ public class LauncherMapper<K1, V1, K2, V2> implements Mapper<K1, V1, K2, V2>, R
                 int errorCode = 0;
                 Throwable errorCause = null;
                 String errorMessage = null;
-
                 try {
                     new LauncherSecurityManager();
                 }
@@ -320,6 +318,7 @@ public class LauncherMapper<K1, V1, K2, V2> implements Mapper<K1, V1, K2, V2>, R
         }
         finally {
             uploadActionDataToHDFS();
+            resetSecurityManager(initialSecurityManager);
         }
     }
 
@@ -597,6 +596,19 @@ public class LauncherMapper<K1, V1, K2, V2> implements Mapper<K1, V1, K2, V2>, R
                     }
                 }
             }
+        }
+    }
+
+    private void resetSecurityManager(SecurityManager initialSecurityManager) {
+        try {
+            SecurityManager prev = System.getSecurityManager();
+            System.setSecurityManager(initialSecurityManager);
+            System.out
+                    .println("Successfully reset security manager from " + prev + " to " + System.getSecurityManager());
+        }
+        catch (Throwable t) {
+            System.err.println("Failed to reset security manager: " + t.getMessage());
+            t.printStackTrace(System.err);
         }
     }
 
