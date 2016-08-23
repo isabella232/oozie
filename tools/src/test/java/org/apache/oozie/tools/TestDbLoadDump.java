@@ -17,7 +17,6 @@
  */
 package org.apache.oozie.tools;
 
-import org.apache.hadoop.fs.FileUtil;
 import org.apache.oozie.WorkflowJobBean;
 import org.apache.oozie.service.JPAService;
 import org.apache.oozie.service.Services;
@@ -33,8 +32,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStreamReader;
-import java.sql.Connection;
-import java.sql.DriverManager;
 import java.util.List;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
@@ -43,28 +40,13 @@ import java.util.zip.ZipOutputStream;
  * Test Dump and dump reading mechanism
  */
 public class TestDbLoadDump extends XTestCase {
-    private SecurityManager SECURITY_MANAGER;
-    private static String url =
-            "jdbc:derby:target/test-data/oozietests/org.apache.oozie.tools.TestOozieDBCLI/data.db;create=true";
-    private String oozieConfig;
 
     File zipDump;
 
     @BeforeClass
     protected void setUp() throws Exception {
-        super.setUp(false);
-        SECURITY_MANAGER = System.getSecurityManager();
-        new LauncherSecurityManager();
-        // remove an old variant
-        FileUtil.fullyDelete(new File("target/test-data/oozietests/org.apache.oozie.tools.TestOozieDBCLI/data.db"));
-        this.oozieConfig = System.getProperty("oozie.test.config.file");
-        File oozieConfig = new File("src/test/resources/hsqldb-oozie-site.xml");
-
-        System.setProperty("oozie.test.config.file", oozieConfig.getAbsolutePath());
-        Class.forName("org.apache.derby.jdbc.EmbeddedDriver");
-        Connection conn = DriverManager.getConnection(url, "sa", "");
-        conn.close();
-
+        System.getProperties().remove("oozie.test.config.file");
+        super.setUp();
         zipDump = new File(getTestCaseDir() + System.getProperty("file.separator") + "dumpTest.zip");
         ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(zipDump));
         File dumpFolder = new File(getClass().getResource("/dumpData").getPath());
@@ -73,14 +55,7 @@ public class TestDbLoadDump extends XTestCase {
 
     @AfterClass
     protected void tearDown() throws Exception {
-        System.setSecurityManager(SECURITY_MANAGER);
-        if (oozieConfig != null) {
-            System.setProperty("oozie.test.config.file", oozieConfig);
-        } else {
-            System.getProperties().remove("oozie.test.config.file");
-        }
         super.tearDown();
-
     }
 
     @Test
@@ -92,19 +67,18 @@ public class TestDbLoadDump extends XTestCase {
         Query q = entityManager.createNamedQuery("GET_WORKFLOWS");
         List<WorkflowJobBean> wfjBeans = q.getResultList();
         int wfjSize = wfjBeans.size();
-        assertEquals(1, wfjSize);
-        assertEquals("0000003-160720041037822-oozie-oozi-W", wfjBeans.get(0).getId());
-        assertEquals("aggregator-wf", wfjBeans.get(0).getAppName());
+        assertEquals("Workflow not imported", 1, wfjSize);
+        assertEquals("Workflow ID incorrect", "0000003-160720041037822-oozie-oozi-W", wfjBeans.get(0).getId());
+        assertEquals("AppName incorrect", "aggregator-wf", wfjBeans.get(0).getAppName());
 
         File newZipDump = new File(getTestCaseDir() + System.getProperty("file.separator") + "newDumpTest.zip");
         //export the contents of the database
         OozieDBExportCLI.main(new String[]{"export", newZipDump.getAbsolutePath()});
-        assertEquals(zipDump.length(), newZipDump.length());
+        assertEquals("Zip file size differ", zipDump.length(), newZipDump.length());
         ZipFile zip = new ZipFile(newZipDump);
         // check that dump is identical with the original input
         BufferedReader reader = new BufferedReader(new InputStreamReader(
                 zip.getInputStream(zip.getEntry("ooziedb_wf.json"))));
-        assertTrue(reader.readLine().contains("0000003-160720041037822-oozie-oozi-W"));
-
+        assertTrue("Exported ID incorrect", reader.readLine().contains("0000003-160720041037822-oozie-oozi-W"));
     }
 }
