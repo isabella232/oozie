@@ -65,6 +65,8 @@ import org.apache.oozie.client.OozieClient;
 import org.apache.oozie.client.WorkflowAction;
 import org.apache.oozie.client.WorkflowJob;
 import org.apache.oozie.command.coord.CoordActionStartXCommand;
+import org.apache.oozie.command.wf.ActionStartXCommand;
+import org.apache.oozie.client.WorkflowJob;
 import org.apache.oozie.service.ConfigurationService;
 import org.apache.oozie.service.HadoopAccessorException;
 import org.apache.oozie.service.HadoopAccessorService;
