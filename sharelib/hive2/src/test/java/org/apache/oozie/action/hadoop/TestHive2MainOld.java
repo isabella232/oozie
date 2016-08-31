@@ -22,6 +22,8 @@ import java.util.HashMap;
 import java.util.Map;
 import junit.framework.Assert;
 import junit.framework.TestCase;
+import org.apache.hadoop.conf.Configuration;
+import java.util.Set;
 
 public class TestHive2MainOld extends TestCase {
 
