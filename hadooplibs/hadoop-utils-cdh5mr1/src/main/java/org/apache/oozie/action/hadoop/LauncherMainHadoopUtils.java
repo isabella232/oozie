@@ -19,6 +19,7 @@
 package org.apache.oozie.action.hadoop;
 
 import org.apache.hadoop.conf.Configuration;
+import java.util.Set;
 
 import java.util.Set;
 
