@@ -903,6 +903,11 @@
                 <artifactId>joda-time</artifactId>
                 <version>2.1</version>
             </dependency>
+            <dependency>
+                <groupId>com.google.code.gson</groupId>
+                <artifactId>gson</artifactId>
+                <version>2.7</version>
+            </dependency>
 
             <dependency>
                 <groupId>org.kitesdk</groupId>
@@ -920,7 +925,6 @@
                 <artifactId>avro-mapred</artifactId>
                 <version>${cdh.avro.version}</version>
             </dependency>
-
         </dependencies>
     </dependencyManagement>
 
@@ -1171,6 +1175,7 @@
                         <exclude>**/build/**</exclude>
                         <exclude>.git/**</exclude>
                         <exclude>test-patch/**</exclude>
+                        <exclude>tools/src/test/resources/dumpData/ooziedb*.json</exclude>
                     </excludes>
                 </configuration>
             </plugin>
