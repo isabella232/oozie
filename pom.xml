@@ -105,6 +105,7 @@
          <xerces.version>2.10.0</xerces.version>
          <curator.version>2.7.1</curator.version>
          <log4j.version>1.2.17</log4j.version>
+         <activemq.version>5.13.3</activemq.version>
     </properties>
 
     <modules>
@@ -581,19 +582,19 @@
            <dependency>
                 <groupId>org.apache.activemq</groupId>
                 <artifactId>activemq-client</artifactId>
-                <version>5.13.2</version>
+		<version>${activemq.version}</version>
            </dependency>
 
            <dependency>
                 <groupId>org.apache.activemq</groupId>
                 <artifactId>activemq-broker</artifactId>
-                <version>5.13.2</version>
+		<version>${activemq.version}</version>
            </dependency>
 
            <dependency>
                 <groupId>org.apache.activemq</groupId>
                 <artifactId>activemq-kahadb-store</artifactId>
-                <version>5.13.2</version>
+		<version>${activemq.version}</version>
            </dependency>
 
             <dependency>
