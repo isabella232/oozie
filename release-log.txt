@@ -1,5 +1,6 @@
 -- Oozie 4.1.0 release
 
+OOZIE-2273 MiniOozie does not work outside of Oozie (rkanter)
 OOZIE-2053 Change old HCatalog API (ryota)
 OOZIE-2064 coord job with frequency coord:endOfMonths doesn't materialize (puru)
 OOZIE-2063 Cron syntax creates duplicate actions (bzhang)
