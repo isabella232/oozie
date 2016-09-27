@@ -205,6 +205,7 @@ public class SparkMain extends LauncherMain {
         }
         System.out.println();
         runSpark(sparkArgs.toArray(new String[sparkArgs.size()]));
+        System.out.println("\n<<< Invocation of Spark command completed <<<\n");
     }
 
     /**

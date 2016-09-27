@@ -277,15 +277,7 @@ public class Hive2MainOld extends LauncherMain {
         }
 
         System.out.println("\n<<< Invocation of Beeline command completed <<<\n");
-
-        // harvesting and recording Hadoop Job IDs
-        Properties jobIds = getHadoopJobIds(logFile, HIVE_JOB_IDS_PATTERNS);
-        File file = new File(System.getProperty("oozie.action.output.properties"));
-        OutputStream os = new FileOutputStream(file);
-        jobIds.store(os, "");
-        os.close();
-        System.out.println(" Hadoop Job IDs executed by Hive: " + jobIds.getProperty(HADOOP_JOBS));
-        System.out.println();
+        writeExternalChildIDs(logFile, HIVE_JOB_IDS_PATTERNS, "Beeline");
     }
 
     protected void runBeeLine(String[] args) throws Exception {

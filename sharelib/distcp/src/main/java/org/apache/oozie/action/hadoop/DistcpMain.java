@@ -69,6 +69,8 @@ public class DistcpMain extends JavaMain {
         catch (InvocationTargetException ex) {
             throw new JavaMainException(ex.getCause());
         }
+
+        System.out.println("\n<<< Invocation of DistCp command completed <<<\n");
     }
 
     protected void getConstructorAndArgs(Class<?> klass, Configuration actionConf) throws Exception {
@@ -94,5 +96,4 @@ public class DistcpMain extends JavaMain {
             }
         }
     }
-
 }
