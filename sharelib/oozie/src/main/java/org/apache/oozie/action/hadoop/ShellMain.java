@@ -65,6 +65,8 @@ public class ShellMain extends LauncherMain {
     protected void run(String[] args) throws Exception {
 
         Configuration actionConf = loadActionConf();
+        setYarnTag(actionConf);
+        setApplicationTags(actionConf, TEZ_APPLICATION_TAGS);
 
         int exitCode = execute(actionConf);
         if (exitCode != 0) {

@@ -43,6 +43,9 @@ public abstract class LauncherMain {
 
     public static final String HADOOP_JOBS = "hadoopJobs";
     public static final String MAPREDUCE_JOB_TAGS = "mapreduce.job.tags";
+    public static final String TEZ_APPLICATION_TAGS = "tez.application.tags";
+    protected static String[] HADOOP_SITE_FILES = new String[]
+            {"core-site.xml", "hdfs-site.xml", "mapred-site.xml", "yarn-site.xml"};
 
     protected static void run(Class<? extends LauncherMain> klass, String[] args) throws Exception {
         LauncherMain main = klass.newInstance();
@@ -210,6 +213,13 @@ public abstract class LauncherMain {
             } else {
                 actionConf.set(MAPREDUCE_JOB_TAGS, actionConf.get(LauncherMainHadoopUtils.CHILD_MAPREDUCE_JOB_TAGS));
             }
+        }
+    }
+
+    protected static void setApplicationTags(Configuration configName, String tagConfigName) {
+        if (configName.get(MAPREDUCE_JOB_TAGS) != null) {
+            System.out.println("Setting [" + tagConfigName + "] tag: " + configName.get(MAPREDUCE_JOB_TAGS));
+            configName.set(tagConfigName, configName.get(MAPREDUCE_JOB_TAGS));
         }
     }
 
