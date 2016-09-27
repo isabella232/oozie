@@ -175,6 +175,7 @@ public class SparkMain extends LauncherMain {
             sparkArgs.add("--conf");
             sparkArgs.add(DIST_FILES + sparkJars);
         }
+
         if (!addedHiveSecurityToken) {
             sparkArgs.add("--conf");
             sparkArgs.add(HIVE_SECURITY_TOKEN + "=false");
@@ -183,6 +184,12 @@ public class SparkMain extends LauncherMain {
             sparkArgs.add("--conf");
             sparkArgs.add(HBASE_SECURITY_TOKEN + "=false");
         }
+
+        if (actionConf.get(MAPREDUCE_JOB_TAGS) != null) {
+            sparkArgs.add("--conf");
+            sparkArgs.add("spark.yarn.tags=" + actionConf.get(MAPREDUCE_JOB_TAGS));
+        }
+
         if (!sparkArgs.contains(VERBOSE_OPTION)) {
             sparkArgs.add(VERBOSE_OPTION);
         }
