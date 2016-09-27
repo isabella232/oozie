@@ -157,6 +157,11 @@ public class SparkMain extends LauncherMain {
             sparkArgs.add(DIST_FILES + sparkJars);
         }
 
+        if (actionConf.get(MAPREDUCE_JOB_TAGS) != null) {
+            sparkArgs.add("--conf");
+            sparkArgs.add("spark.yarn.tags=" + actionConf.get(MAPREDUCE_JOB_TAGS));
+        }
+
         if (!sparkArgs.contains(VERBOSE_OPTION)) {
             sparkArgs.add(VERBOSE_OPTION);
         }
