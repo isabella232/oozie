@@ -209,13 +209,13 @@
         <dependency>
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-streaming-kafka_2.10</artifactId>
-            <version>${spark.version}</version>
+            <version>${spark.streaming.kafka.version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-bagel_2.10</artifactId>
-            <version>${spark.version}</version>
+            <version>${spark.bagel.version}</version>
             <scope>compile</scope>
         </dependency>
 
