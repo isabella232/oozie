@@ -1175,7 +1175,9 @@
                         <exclude>**/build/**</exclude>
                         <exclude>.git/**</exclude>
                         <exclude>test-patch/**</exclude>
-                        <exclude>tools/src/test/resources/dumpData/ooziedb*.json</exclude>
+                        <exclude>**/.idea/**</exclude>
+                        <exclude>*.patch</exclude>
+                        <exclude>**/*.json</exclude>
                     </excludes>
                 </configuration>
             </plugin>
