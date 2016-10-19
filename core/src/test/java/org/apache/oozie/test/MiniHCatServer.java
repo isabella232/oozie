@@ -123,6 +123,7 @@ public class MiniHCatServer {
         final HiveConf serverConf = new HiveConf(hadoopConf, this.getClass());
         serverConf.set("hive.metastore.local", "false");
         serverConf.set(HiveConf.ConfVars.METASTORECONNECTURLKEY.varname, "jdbc:derby:target/metastore_db;create=true");
+        serverConf.set("datanucleus.schema.autoCreateTables", "true");
         //serverConf.set(HiveConf.ConfVars.METASTORE_EVENT_LISTENERS.varname, NotificationListener.class.getName());
         File derbyLogFile = new File("target/derby.log");
         derbyLogFile.createNewFile();
