@@ -34,11 +34,14 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.Counters;
+import org.apache.hadoop.io.serializer.WritableSerialization;
+import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RunningJob;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.oozie.client.OozieClient;
@@ -249,6 +252,7 @@ public class LauncherHelper {
                 Map<String, String> ret = new HashMap<String, String>();
                 Path seqFilePath = getActionDataSequenceFilePath(actionDir);
                 if (fs.exists(seqFilePath)) {
+                    conf.set(CommonConfigurationKeys.IO_SERIALIZATIONS_KEY, WritableSerialization.class.getCanonicalName());
                     SequenceFile.Reader seqFile = new SequenceFile.Reader(fs, seqFilePath, conf);
                     Text key = new Text(), value = new Text();
                     while (seqFile.next(key, value)) {
