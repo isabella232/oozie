@@ -512,7 +512,8 @@ public class SparkMain extends LauncherMain {
     private String getJarVersion(File jarFile) throws IOException {
         @SuppressWarnings("resource")
         Manifest manifest = new JarFile(jarFile).getManifest();
-        return manifest.getMainAttributes().getValue("Specification-Version");
+        String version = manifest.getMainAttributes().getValue("Specification-Version");
+        return version == null ? sparkVersion : version;
     }
 
     private void appendWithPathSeparator(String what, StringBuilder to){
