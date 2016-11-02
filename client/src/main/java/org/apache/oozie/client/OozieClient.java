@@ -126,6 +126,8 @@ public class OozieClient {
 
     public static final String FILTER_USER = "user";
 
+    public static final String FILTER_TEXT = "text";
+
     public static final String FILTER_GROUP = "group";
 
     public static final String FILTER_NAME = "name";
