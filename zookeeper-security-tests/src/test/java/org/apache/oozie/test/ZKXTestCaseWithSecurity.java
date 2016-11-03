@@ -38,8 +38,9 @@ import org.apache.zookeeper.server.ZooKeeperSaslServer;
  * creating the first thing that uses ZKUtils.  Make sure to set it back to false when done.
  */
 public abstract class ZKXTestCaseWithSecurity extends ZKXTestCase {
-    private MiniKdc kdc = null;
-    private File keytabFile;
+    private static MiniKdc kdc = null;
+    private static File keytabFile;
+
     private String originalKeytabLoc;
     private String originalPrincipal;
 
@@ -66,9 +67,6 @@ public abstract class ZKXTestCaseWithSecurity extends ZKXTestCase {
         // Just in case the test forgets to set this back
         Services.get().getConf().set("oozie.zookeeper.secure", "false");
         super.tearDown();
-        if (kdc != null) {
-            kdc.stop();
-        }
     }
 
     /**
@@ -103,11 +101,14 @@ public abstract class ZKXTestCaseWithSecurity extends ZKXTestCase {
         setSystemProperty("javax.security.auth.useSubjectCredsOnly", "false");
 
         // Setup KDC and principal
-        kdc = new MiniKdc(MiniKdc.createConf(), new File(getTestCaseDir()));
-        kdc.start();
-        keytabFile = new File(getTestCaseDir(), "test.keytab");
         String serverPrincipal = "zookeeper/127.0.0.1";
-        kdc.createPrincipal(keytabFile, getPrincipal(), serverPrincipal);
+
+        if (kdc == null) {
+            kdc = new MiniKdc(MiniKdc.createConf(), new File(getTestCaseDir()));
+            kdc.start();
+            keytabFile = new File(getTestCaseDir(), "test.keytab");
+            kdc.createPrincipal(keytabFile, getPrincipal(), serverPrincipal);
+        }
 
         setSystemProperty("zookeeper.authProvider.1", "org.apache.zookeeper.server.auth.SASLAuthenticationProvider");
         setSystemProperty("zookeeper.kerberos.removeHostFromPrincipal", "true");
@@ -119,6 +120,7 @@ public abstract class ZKXTestCaseWithSecurity extends ZKXTestCase {
         Configuration.setConfiguration(JaasConfiguration.getInstance());
 
         setSystemProperty(ZooKeeperSaslServer.LOGIN_CONTEXT_NAME_KEY, "Server");
+
 
         return new TestingServer();
     }
