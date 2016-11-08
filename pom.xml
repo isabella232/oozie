@@ -19,15 +19,15 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <parent>
-        <groupId>org.apache</groupId>
-        <artifactId>apache</artifactId>
-        <version>17</version>
+        <groupId>com.cloudera.cdh</groupId>
+        <artifactId>cdh-root</artifactId>
+        <version>6.x-SNAPSHOT</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.apache.oozie</groupId>
     <artifactId>oozie-main</artifactId>
-    <version>5.0.0-beta1</version>
+    <version>5.0.0-beta1-cdh6.x-SNAPSHOT</version>
     <description>Apache Oozie Main</description>
     <name>Apache Oozie Main</name>
     <packaging>pom</packaging>
@@ -48,9 +48,6 @@
         <targetJavaVersion>1.8</targetJavaVersion>
         <sourceJavaVersion>1.8</sourceJavaVersion>
         <minJavaVersion>1.8</minJavaVersion>
-
-        <distMgmtSnapshotsName>Apache Development Snapshot Repository</distMgmtSnapshotsName>
-        <distMgmtSnapshotsUrl>https://repository.apache.org/content/repositories/snapshots</distMgmtSnapshotsUrl>
 
         <!-- to be able to run a single test case from the main project -->
         <failIfNoTests>false</failIfNoTests>
@@ -79,39 +76,39 @@
         </oozie.test.default.config.file>
         <oozie.test.config.file>${oozie.test.default.config.file}</oozie.test.config.file>
 
-        <hadoop.version>2.6.0</hadoop.version>
-        <hadoop.majorversion>2</hadoop.majorversion>
-        <hadooplib.version>hadoop-${hadoop.majorversion}-${project.version}</hadooplib.version>
-        <hbase.version>1.2.3</hbase.version>
+        <hadoop.version>${cdh.hadoop.version}</hadoop.version>
+        <hbase.version>${cdh.hbase.version}</hbase.version>
 
         <dropwizard.metrics.version>3.1.2</dropwizard.metrics.version>
 
         <clover.license>/home/jenkins/tools/clover/latest/lib/clover.license</clover.license>
 
 
-         <!-- Sharelib component versions -->
-         <hive.version>1.2.0</hive.version>
-         <hive.jline.version>2.12</hive.jline.version>
-         <pig.version>0.16.0</pig.version>
-         <pig.classifier>h2</pig.classifier>
-         <hive.classifier>core</hive.classifier>
-         <sqoop.version>1.4.3</sqoop.version>
-         <spark.version>1.6.1</spark.version>
-         <spark.streaming.kafka.version>1.6.1</spark.streaming.kafka.version>
-         <spark.bagel.version>1.6.1</spark.bagel.version>
-         <spark.guava.version>14.0.1</spark.guava.version>
-         <spark.scala.binary.version>2.10</spark.scala.binary.version>
-         <sqoop.classifier>hadoop200</sqoop.classifier>
+         <hive.version>${cdh.hive.version}</hive.version>
+         <hive.jline.version>${cdh.jline.version}</hive.jline.version>
+         <hive.classifier></hive.classifier>
+         <pig.version>${cdh.pig.version}</pig.version>
+         <pig.classifier></pig.classifier>
+         <sqoop.version>${cdh.sqoop.version}</sqoop.version>
+         <spark.version>${cdh.spark.version}</spark.version>
+         <spark.streaming.kafka.version>${cdh.spark.version}</spark.streaming.kafka.version>
+         <spark.bagel.version>${cdh.spark.version}</spark.bagel.version>
+         <spark.guava.version>${cdh.guava.version}</spark.guava.version>
+         <spark.scala.binary.version>${cdh.scala.binary.version}</spark.scala.binary.version>
+         <sqoop.classifier></sqoop.classifier>
+         <streaming.version>${hadoop.version}</streaming.version>
+         <hadoop.auth.version>${hadoop.version}</hadoop.auth.version>
          <tez.version>0.8.4</tez.version>
 
          <jetty.version>9.2.19.v20160908</jetty.version>
 
          <jline.version>0.9.94</jline.version>
+         <junit.version>4.11</junit.version>
          <openjpa.version>2.4.2</openjpa.version>
          <xerces.version>2.11.0</xerces.version>
-         <curator.version>2.5.0</curator.version>
+         <curator.version>${cdh.curator.version}</curator.version>
          <jackson.version>1.9.13</jackson.version>
-         <log4j.version>1.2.17</log4j.version>
+         <log4j.version>${cdh.log4j.version}</log4j.version>
          <activemq.version>5.13.3</activemq.version>
          <httpcore.version>4.3.3</httpcore.version>
          <httpclient.version>4.3.6</httpclient.version>
@@ -134,6 +131,25 @@
     </modules>
 
     <repositories>
+        <repository>
+            <id>cdh.repo</id>
+            <url>https://repository.cloudera.com/content/groups/cloudera-repos</url>
+            <name>Cloudera Repositories</name>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>cdh.snapshots.repo</id>
+            <url>https://repository.cloudera.com/content/repositories/snapshots</url>
+            <name>Cloudera Snapshots Repository</name>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+        </repository>
         <repository>
             <id>central</id>
             <url>http://repo1.maven.org/maven2</url>
@@ -266,19 +282,19 @@
             <dependency>
                 <groupId>com.googlecode.json-simple</groupId>
                 <artifactId>json-simple</artifactId>
-                <version>1.1.1</version>
+                <version>${cdh.json-simple.version}</version>
             </dependency>
 
             <dependency>
                 <groupId>commons-cli</groupId>
                 <artifactId>commons-cli</artifactId>
-                <version>1.2</version>
+                <version>${cdh.commons-cli.version}</version>
             </dependency>
 
             <dependency>
                 <groupId>junit</groupId>
                 <artifactId>junit</artifactId>
-                <version>4.11</version>
+                <version>${junit.version}</version>
                 <scope>test</scope>
             </dependency>
 
@@ -291,7 +307,7 @@
           <dependency>
               <groupId>org.slf4j</groupId>
               <artifactId>slf4j-simple</artifactId>
-              <version>1.6.6</version>
+              <version>${cdh.slf4j.version}</version>
           </dependency>
 
             <dependency>
@@ -754,7 +770,7 @@
             <dependency>
                 <groupId>commons-lang</groupId>
                 <artifactId>commons-lang</artifactId>
-                <version>2.4</version>
+                <version>${cdh.commons-lang.version}</version>
             </dependency>
 
             <dependency>
@@ -778,7 +794,7 @@
             <dependency>
                 <groupId>commons-codec</groupId>
                 <artifactId>commons-codec</artifactId>
-                <version>1.4</version>
+                <version>${cdh.commons-codec.version}</version>
             </dependency>
 
             <dependency>
@@ -919,7 +935,7 @@
             <dependency>
                 <groupId>org.apache.thrift</groupId>
                 <artifactId>thrift</artifactId>
-                <version>0.5.0-cdh</version>
+                <version>${cdh.thrift.version}</version>
             </dependency>
 
             <dependency>
@@ -1157,36 +1173,36 @@
             <dependency>
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-api</artifactId>
-                <version>1.6.6</version>
+                <version>${cdh.slf4j.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-log4j12</artifactId>
-                <version>1.6.6</version>
+                <version>${cdh.slf4j.version}</version>
             </dependency>
 
            <dependency>
                 <groupId>org.apache.activemq</groupId>
                 <artifactId>activemq-client</artifactId>
-		<version>${activemq.version}</version>
+	        	<version>${activemq.version}</version>
            </dependency>
 
            <dependency>
                 <groupId>org.apache.activemq</groupId>
                 <artifactId>activemq-broker</artifactId>
-		<version>${activemq.version}</version>
+        		<version>${activemq.version}</version>
            </dependency>
 
            <dependency>
                 <groupId>org.apache.activemq</groupId>
                 <artifactId>activemq-kahadb-store</artifactId>
-		<version>${activemq.version}</version>
+	        	<version>${activemq.version}</version>
            </dependency>
 
             <dependency>
                 <groupId>commons-logging</groupId>
                 <artifactId>commons-logging</artifactId>
-                <version>1.1</version>
+                <version>${cdh.commons-logging.version}</version>
                 <exclusions>
                     <exclusion>
                         <groupId>avalon-framework</groupId>
@@ -1252,7 +1268,7 @@
             <dependency>
                 <groupId>commons-el</groupId>
                 <artifactId>commons-el</artifactId>
-                <version>1.0</version>
+                <version>${cdh.commons-el.version}</version>
             </dependency>
 
             <dependency>
@@ -1270,13 +1286,13 @@
             <dependency>
                 <groupId>commons-dbcp</groupId>
                 <artifactId>commons-dbcp</artifactId>
-                <version>1.4</version>
+                <version>${cdh.commons-dbcp.version}</version>
             </dependency>
 
             <dependency>
                 <groupId>hsqldb</groupId>
                 <artifactId>hsqldb</artifactId>
-                <version>1.8.0.10</version>
+                <version>${cdh.hsqldb.version}</version>
             </dependency>
 
             <dependency>
@@ -1294,7 +1310,7 @@
             <dependency>
                 <groupId>org.apache.derby</groupId>
                 <artifactId>derby</artifactId>
-                <version>10.10.1.1</version>
+                <version>${cdh.derby.version}</version>
                 <scope>compile</scope>
             </dependency>
 
@@ -1338,13 +1354,13 @@
             <dependency>
                 <groupId>org.antlr</groupId>
                 <artifactId>antlr-runtime</artifactId>
-                <version>3.4</version>
+                <version>${cdh.antlr.version}</version>
             </dependency>
 
             <dependency>
                 <groupId>com.google.guava</groupId>
                 <artifactId>guava</artifactId>
-                <version>11.0.2</version>
+                <version>${cdh.guava.version}</version>
             </dependency>
 
             <dependency>
@@ -1357,7 +1373,7 @@
             <dependency>
                 <groupId>commons-io</groupId>
                 <artifactId>commons-io</artifactId>
-                <version>2.4</version>
+                <version>${cdh.commons-io.version}</version>
             </dependency>
 
             <dependency>
@@ -1519,13 +1535,13 @@
             <dependency>
                 <groupId>dk.brics.automaton</groupId>
                 <artifactId>automaton</artifactId>
-                <version>1.11-8</version>
+                <version>${cdh.automaton.version}</version>
             </dependency>
 
             <dependency>
                 <groupId>joda-time</groupId>
                 <artifactId>joda-time</artifactId>
-                <version>2.1</version>
+                <version>${cdh.joda-time.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.google.code.gson</groupId>
@@ -1957,440 +1973,6 @@
             <properties>
                 <oozie.test.forkMode>always</oozie.test.forkMode>
             </properties>
-        </profile>
-        <profile>
-            <id>spark-1</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-            <properties>
-                <spark.version>1.6.1</spark.version>
-                <spark.streaming.kafka.version>1.6.1</spark.streaming.kafka.version>
-                <spark.bagel.version>1.6.1</spark.bagel.version>
-            </properties>
-        </profile>
-        <profile>
-            <id>spark-2</id>
-            <activation>
-                <activeByDefault>false</activeByDefault>
-            </activation>
-            <properties>
-                <spark.version>2.1.0</spark.version>
-                <spark.streaming.kafka.version>1.6.2</spark.streaming.kafka.version>
-                <spark.bagel.version>1.6.2</spark.bagel.version>
-            </properties>
-        </profile>
-        <profile>
-            <id>tez</id>
-            <activation>
-                <activeByDefault>false</activeByDefault>
-            </activation>
-            <dependencyManagement>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.apache.tez</groupId>
-                        <artifactId>tez-api</artifactId>
-                        <version>${tez.version}</version>
-                        <exclusions>
-                            <exclusion>
-                                <groupId>commons-lang</groupId>
-                                <artifactId>commons-lang</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.apache.hadoop</groupId>
-                                <artifactId>hadoop-annotations</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.apache.hadoop</groupId>
-                                <artifactId>hadoop-common</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.apache.hadoop</groupId>
-                                <artifactId>hadoop-hdfs</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.apache.hadoop</groupId>
-                                <artifactId>hadoop-mapreduce-client-common</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.apache.hadoop</groupId>
-                                <artifactId>hadoop-mapreduce-client-core</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.apache.hadoop</groupId>
-                                <artifactId>hadoop-yarn-api</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.apache.hadoop</groupId>
-                                <artifactId>hadoop-yarn-client</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.apache.hadoop</groupId>
-                                <artifactId>hadoop-yarn-common</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.apache.hadoop</groupId>
-                                <artifactId>hadoop-yarn-server-web-proxy</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.codehaus.jettison</groupId>
-                                <artifactId>jettison</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>javax.servlet</groupId>
-                                <artifactId>servlet-api</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.slf4j</groupId>
-                                <artifactId>slf4j-api</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.slf4j</groupId>
-                                <artifactId>slf4j-log4j12</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>com.sun.jersey</groupId>
-                                <artifactId>jersey-json</artifactId>
-                            </exclusion>
-                        </exclusions>
-                    </dependency>
-                    <dependency>
-                        <groupId>org.apache.tez</groupId>
-                        <artifactId>tez-runtime-library</artifactId>
-                        <version>${tez.version}</version>
-                        <exclusions>
-                            <exclusion>
-                                <groupId>commons-lang</groupId>
-                                <artifactId>commons-lang</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.apache.hadoop</groupId>
-                                <artifactId>hadoop-annotations</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.apache.hadoop</groupId>
-                                <artifactId>hadoop-common</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.apache.hadoop</groupId>
-                                <artifactId>hadoop-hdfs</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.apache.hadoop</groupId>
-                                <artifactId>hadoop-mapreduce-client-common</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.apache.hadoop</groupId>
-                                <artifactId>hadoop-mapreduce-client-core</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.apache.hadoop</groupId>
-                                <artifactId>hadoop-yarn-api</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.apache.hadoop</groupId>
-                                <artifactId>hadoop-yarn-client</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.apache.hadoop</groupId>
-                                <artifactId>hadoop-yarn-common</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.apache.hadoop</groupId>
-                                <artifactId>hadoop-yarn-server-web-proxy</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.codehaus.jettison</groupId>
-                                <artifactId>jettison</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>javax.servlet</groupId>
-                                <artifactId>servlet-api</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.slf4j</groupId>
-                                <artifactId>slf4j-api</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.slf4j</groupId>
-                                <artifactId>slf4j-log4j12</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>com.sun.jersey</groupId>
-                                <artifactId>jersey-json</artifactId>
-                            </exclusion>
-                        </exclusions>
-                    </dependency>
-                    <dependency>
-                        <groupId>org.apache.tez</groupId>
-                        <artifactId>tez-runtime-internals</artifactId>
-                        <version>${tez.version}</version>
-                        <exclusions>
-                            <exclusion>
-                                <groupId>commons-lang</groupId>
-                                <artifactId>commons-lang</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.apache.hadoop</groupId>
-                                <artifactId>hadoop-annotations</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.apache.hadoop</groupId>
-                                <artifactId>hadoop-common</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.apache.hadoop</groupId>
-                                <artifactId>hadoop-hdfs</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.apache.hadoop</groupId>
-                                <artifactId>hadoop-mapreduce-client-common</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.apache.hadoop</groupId>
-                                <artifactId>hadoop-mapreduce-client-core</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.apache.hadoop</groupId>
-                                <artifactId>hadoop-yarn-api</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.apache.hadoop</groupId>
-                                <artifactId>hadoop-yarn-client</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.apache.hadoop</groupId>
-                                <artifactId>hadoop-yarn-common</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.apache.hadoop</groupId>
-                                <artifactId>hadoop-yarn-server-web-proxy</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.codehaus.jettison</groupId>
-                                <artifactId>jettison</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>javax.servlet</groupId>
-                                <artifactId>servlet-api</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.slf4j</groupId>
-                                <artifactId>slf4j-api</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.slf4j</groupId>
-                                <artifactId>slf4j-log4j12</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>com.sun.jersey</groupId>
-                                <artifactId>jersey-json</artifactId>
-                            </exclusion>
-                        </exclusions>
-                    </dependency>
-                    <dependency>
-                        <groupId>org.apache.tez</groupId>
-                        <artifactId>tez-mapreduce</artifactId>
-                        <version>${tez.version}</version>
-                        <exclusions>
-                            <exclusion>
-                                <groupId>commons-lang</groupId>
-                                <artifactId>commons-lang</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.apache.hadoop</groupId>
-                                <artifactId>hadoop-annotations</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.apache.hadoop</groupId>
-                                <artifactId>hadoop-common</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.apache.hadoop</groupId>
-                                <artifactId>hadoop-hdfs</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.apache.hadoop</groupId>
-                                <artifactId>hadoop-mapreduce-client-common</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.apache.hadoop</groupId>
-                                <artifactId>hadoop-mapreduce-client-core</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.apache.hadoop</groupId>
-                                <artifactId>hadoop-yarn-api</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.apache.hadoop</groupId>
-                                <artifactId>hadoop-yarn-client</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.apache.hadoop</groupId>
-                                <artifactId>hadoop-yarn-common</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.apache.hadoop</groupId>
-                                <artifactId>hadoop-yarn-server-web-proxy</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.codehaus.jettison</groupId>
-                                <artifactId>jettison</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>javax.servlet</groupId>
-                                <artifactId>servlet-api</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.slf4j</groupId>
-                                <artifactId>slf4j-api</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.slf4j</groupId>
-                                <artifactId>slf4j-log4j12</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>com.sun.jersey</groupId>
-                                <artifactId>jersey-json</artifactId>
-                            </exclusion>
-                        </exclusions>
-                    </dependency>
-                    <dependency>
-                        <groupId>org.apache.tez</groupId>
-                        <artifactId>tez-dag</artifactId>
-                        <version>${tez.version}</version>
-                        <exclusions>
-                            <exclusion>
-                                <groupId>commons-lang</groupId>
-                                <artifactId>commons-lang</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.apache.hadoop</groupId>
-                                <artifactId>hadoop-annotations</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.apache.hadoop</groupId>
-                                <artifactId>hadoop-common</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.apache.hadoop</groupId>
-                                <artifactId>hadoop-hdfs</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.apache.hadoop</groupId>
-                                <artifactId>hadoop-mapreduce-client-common</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.apache.hadoop</groupId>
-                                <artifactId>hadoop-mapreduce-client-core</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.apache.hadoop</groupId>
-                                <artifactId>hadoop-yarn-api</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.apache.hadoop</groupId>
-                                <artifactId>hadoop-yarn-client</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.apache.hadoop</groupId>
-                                <artifactId>hadoop-yarn-common</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.apache.hadoop</groupId>
-                                <artifactId>hadoop-yarn-server-web-proxy</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.codehaus.jettison</groupId>
-                                <artifactId>jettison</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>javax.servlet</groupId>
-                                <artifactId>servlet-api</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.slf4j</groupId>
-                                <artifactId>slf4j-api</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.slf4j</groupId>
-                                <artifactId>slf4j-log4j12</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>com.sun.jersey</groupId>
-                                <artifactId>jersey-json</artifactId>
-                            </exclusion>
-                        </exclusions>
-                    </dependency>
-                    <dependency>
-                        <groupId>org.apache.tez</groupId>
-                        <artifactId>tez-yarn-timeline-history-with-acls</artifactId>
-                        <version>${tez.version}</version>
-                        <exclusions>
-                            <exclusion>
-                                <groupId>commons-lang</groupId>
-                                <artifactId>commons-lang</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.apache.hadoop</groupId>
-                                <artifactId>hadoop-annotations</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.apache.hadoop</groupId>
-                                <artifactId>hadoop-common</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.apache.hadoop</groupId>
-                                <artifactId>hadoop-hdfs</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.apache.hadoop</groupId>
-                                <artifactId>hadoop-mapreduce-client-common</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.apache.hadoop</groupId>
-                                <artifactId>hadoop-mapreduce-client-core</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.apache.hadoop</groupId>
-                                <artifactId>hadoop-yarn-api</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.apache.hadoop</groupId>
-                                <artifactId>hadoop-yarn-client</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.apache.hadoop</groupId>
-                                <artifactId>hadoop-yarn-common</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.apache.hadoop</groupId>
-                                <artifactId>hadoop-yarn-server-web-proxy</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.codehaus.jettison</groupId>
-                                <artifactId>jettison</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>javax.servlet</groupId>
-                                <artifactId>servlet-api</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.slf4j</groupId>
-                                <artifactId>slf4j-api</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.slf4j</groupId>
-                                <artifactId>slf4j-log4j12</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>com.sun.jersey</groupId>
-                                <artifactId>jersey-json</artifactId>
-                            </exclusion>
-                        </exclusions>
-                    </dependency>
-                </dependencies>
-            </dependencyManagement>
         </profile>
     </profiles>
 </project>
