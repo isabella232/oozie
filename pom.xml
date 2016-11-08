@@ -482,7 +482,12 @@
                     </exclusion>
                 </exclusions>
             </dependency>
-
+            <dependency>
+                <groupId>org.apache.hive.hcatalog</groupId>
+                <artifactId>hive-hcatalog-pig-adapter</artifactId>
+                <version>${hive.version}</version>
+                <scope>compile</scope>
+            </dependency>
             <dependency>
                 <groupId>org.apache.hive.hcatalog</groupId>
                 <artifactId>hive-hcatalog-server-extensions</artifactId>
