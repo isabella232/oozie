@@ -484,7 +484,7 @@
                 <groupId>org.apache.hive.hcatalog</groupId>
                 <artifactId>hive-webhcat-java-client</artifactId>
                 <version>${hive.version}</version>
-                <scope>provided</scope>
+                <scope>compile</scope>
                 <exclusions>
                     <exclusion>
                         <groupId>org.apache.hive</groupId>
@@ -497,7 +497,7 @@
                 <groupId>org.apache.hive.hcatalog</groupId>
                 <artifactId>hive-hcatalog-server-extensions</artifactId>
                 <version>${hive.version}</version>
-                <scope>provided</scope>
+                <scope>compile</scope>
                 <exclusions>
                     <exclusion>
                         <groupId>org.apache.hadoop</groupId>
@@ -542,7 +542,7 @@
                 <groupId>org.apache.hbase</groupId>
                 <artifactId>hbase-client</artifactId>
                 <version>${hbase.version}</version>
-                <scope>provided</scope>
+                <scope>compile</scope>
                 <exclusions>
                     <exclusion>
                         <groupId>org.codehaus.jackson</groupId>
