@@ -40,6 +40,11 @@
     <dependencies>
         <dependency>
             <groupId>org.apache.hive.hcatalog</groupId>
+            <artifactId>hive-hcatalog-pig-adapter</artifactId>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hive.hcatalog</groupId>
             <artifactId>hive-webhcat-java-client</artifactId>
             <scope>compile</scope>
             <exclusions>
