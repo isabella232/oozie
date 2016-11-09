@@ -106,7 +106,7 @@
          <openjpa.version>2.4.2</openjpa.version>
          <xerces.version>2.11.0</xerces.version>
          <curator.version>${cdh.curator.version}</curator.version>
-         <jackson.version>1.9.13</jackson.version>
+         <jackson.version>${cdh.jackson.version}</jackson.version>
          <log4j.version>${cdh.log4j.version}</log4j.version>
          <activemq.version>5.13.3</activemq.version>
          <httpcore.version>4.3.3</httpcore.version>
