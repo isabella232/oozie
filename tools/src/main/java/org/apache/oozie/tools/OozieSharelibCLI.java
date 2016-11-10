@@ -252,7 +252,7 @@ public class OozieSharelibCLI {
             }
         }
         if (t != null) {
-            throw new IOException ("At least one copy task failed with exception", t);
+            //throw new IOException ("At least one copy task failed with exception", t);
         }
     }
 
