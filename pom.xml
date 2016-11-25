@@ -114,7 +114,6 @@
          <activemq.version>5.13.3</activemq.version>
          <httpcore.version>4.3.3</httpcore.version>
          <httpclient.version>4.3.6</httpclient.version>
-         <kyro.version>2.22</kyro.version>
          <json.version>20090211</json.version>
     </properties>
 
@@ -192,6 +191,12 @@
 
     <dependencyManagement>
         <dependencies>
+            <dependency> 
+                <groupId>org.xerial.snappy</groupId>
+                <artifactId>snappy-java</artifactId>
+                <version>1.0.5</version>
+            </dependency>
+
             <dependency>
                 <groupId>org.apache.oozie</groupId>
                 <artifactId>oozie-client</artifactId>
@@ -817,12 +822,6 @@
                 <groupId>org.apache.curator</groupId>
                 <artifactId>curator-client</artifactId>
                 <version>${curator.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>com.esotericsoftware.kryo</groupId>
-                <artifactId>kryo</artifactId>
-                <version>${kyro.version}</version>
             </dependency>
 
             <dependency>
