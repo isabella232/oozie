@@ -504,6 +504,11 @@
             <artifactId>jline</artifactId>
             <version>${hive.jline.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.esotericsoftware.kryo</groupId>
+            <artifactId>kryo</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>

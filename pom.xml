@@ -114,8 +114,9 @@
          <activemq.version>5.13.3</activemq.version>
          <httpcore.version>4.3.3</httpcore.version>
          <httpclient.version>4.3.6</httpclient.version>
-         <kyro.version>2.22</kyro.version>
+         <kryo.version>2.22</kryo.version>
          <json.version>20090211</json.version>
+         <apacheds.version>2.0.0-M2</apacheds.version>
     </properties>
 
     <modules>
@@ -822,7 +823,7 @@
             <dependency>
                 <groupId>com.esotericsoftware.kryo</groupId>
                 <artifactId>kryo</artifactId>
-                <version>${kyro.version}</version>
+                <version>${kryo.version}</version>
             </dependency>
 
             <dependency>
@@ -979,6 +980,12 @@
                 <groupId>org.apache.avro</groupId>
                 <artifactId>avro-mapred</artifactId>
                 <version>${cdh.avro.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.directory.jdbm</groupId>
+                <artifactId>apacheds-jdbm1</artifactId>
+                <version>${apacheds.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
