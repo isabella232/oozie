@@ -1267,7 +1267,6 @@
             </activation>
             <properties>
                 <hadoop.version>${cdh.mr1.version}</hadoop.version>
-                <hive.classifier></hive.classifier>
             </properties>
         </profile>
         <profile>
