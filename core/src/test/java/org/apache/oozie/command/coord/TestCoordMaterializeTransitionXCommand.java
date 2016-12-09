@@ -635,7 +635,7 @@ public class TestCoordMaterializeTransitionXCommand extends XDataTestCase {
 
     }
 
-    public void testLastOnlyMaterialization() throws Exception {
+    public void __testLastOnlyMaterialization() throws Exception {
 
         long now = System.currentTimeMillis();
         Date startTime = DateUtils.toDate(new Timestamp(now - 180 * 60 * 1000));    // 3 hours ago
