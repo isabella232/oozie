@@ -101,6 +101,7 @@
          <spark.streaming.kafka.version>${cdh.spark.version}</spark.streaming.kafka.version>
          <spark.bagel.version>${cdh.spark.version}</spark.bagel.version>
          <spark.guava.version>14.0.1</spark.guava.version>
+         <spark.kryo.version>2.21</spark.kryo.version>
          <streaming.version>${cdh.hadoop.version}</streaming.version>
          <distcp.version>${hadooplib.version}</distcp.version>
 
