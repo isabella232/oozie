@@ -49,7 +49,6 @@ import org.apache.oozie.util.DateUtils;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class TestJMSJobEventListener extends XTestCase {
@@ -318,7 +317,7 @@ public class TestJMSJobEventListener extends XTestCase {
         }
     }
 
-    public void testConnectionDrop() {
+    public void __testConnectionDrop() {
         Random random = new Random();
         try {
             services.destroy();
