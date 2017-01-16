@@ -102,16 +102,7 @@
                     <groupId>org.spark-project.hive</groupId>
                     <artifactId>hive-shims</artifactId>
                 </exclusion>
-                <exclusion>
-                    <groupId>com.esotericsoftware.kryo</groupId>
-                    <artifactId>kryo</artifactId>
-	        </exclusion>
             </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>com.esotericsoftware.kryo</groupId>
-            <artifactId>kryo</artifactId>
-            <version>${spark.kryo.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.spark</groupId>
