@@ -60,6 +60,10 @@
             </includes>
             <fileMode>0755</fileMode>
         </fileSet>
+        <fileSet>
+            <directory>${basedir}/../webapp/target/oozie-webapp-${project.version}/WEB-INF/lib</directory>
+            <outputDirectory>/lib</outputDirectory>
+        </fileSet>
         <!-- Tools -->
         <fileSet>
             <directory>${basedir}/../tools/target/oozie-tools-${project.version}-tools/oozie-tools-${project.version}/bin</directory>
