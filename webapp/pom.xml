@@ -98,10 +98,6 @@
                 </exclusion>
                 <exclusion>
                     <groupId>org.apache.hive.hcatalog</groupId>
-                    <artifactId>hive-webhcat-java-client</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.apache.hive.hcatalog</groupId>
                     <artifactId>hive-hcatalog-server-extensions</artifactId>
                 </exclusion>
                 <!--Excluding this because of license problem-->
@@ -279,6 +275,32 @@
                     <groupId>org.apache.hadoop</groupId>
                     <artifactId>hadoop-client</artifactId>
                     <scope>compile</scope>
+                    <exclusions>
+                        <exclusion>
+                            <groupId>com.sun.jersey</groupId>
+                            <artifactId>jersey-core</artifactId>
+                        </exclusion>
+                        <exclusion>
+                            <groupId>com.sun.jersey</groupId>
+                            <artifactId>jersey-server</artifactId>
+                        </exclusion>
+                        <exclusion>
+                            <groupId>com.sun.jersey</groupId>
+                            <artifactId>jersey-servlet</artifactId>
+                        </exclusion>
+                        <exclusion>
+                            <groupId>com.sun.jersey</groupId>
+                            <artifactId>jersey-json</artifactId>
+                        </exclusion>
+                        <exclusion>
+                            <groupId>javax.servlet.jsp</groupId>
+                            <artifactId>jsp-api</artifactId>
+                        </exclusion>
+                        <exclusion>
+                            <groupId>javax.servlet.jsp</groupId>
+                            <artifactId>jsp-api</artifactId>
+                        </exclusion>
+                    </exclusions>
                 </dependency>
                 <dependency>
                     <groupId>org.apache.hadoop</groupId>
