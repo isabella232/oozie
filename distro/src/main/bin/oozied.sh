@@ -69,6 +69,7 @@ setup_catalina_opts() {
   catalina_opts="${catalina_opts} -Doozie.base.url=${OOZIE_BASE_URL}";
   catalina_opts="${catalina_opts} -Doozie.https.keystore.file=${OOZIE_HTTPS_KEYSTORE_FILE}";
   catalina_opts="${catalina_opts} -Doozie.https.keystore.pass=${OOZIE_HTTPS_KEYSTORE_PASS}";
+  catalina_opts="${catalina_opts} -Doozie.https.ciphers=${OOZIE_HTTPS_CIPHERS}";
 
   # add required native libraries such as compression codecs
   catalina_opts="${catalina_opts} -Djava.library.path=${JAVA_LIBRARY_PATH}";
