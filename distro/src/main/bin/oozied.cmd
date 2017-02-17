@@ -70,6 +70,7 @@ goto exec_catalina
 
   set catalina_opts_tmp=%catalina_opts_tmp% -Doozie.https.keystore.file=%OOZIE_HTTPS_KEYSTORE_FILE%
   set catalina_opts_tmp=%catalina_opts_tmp% -Doozie.https.keystore.pass=%OOZIE_HTTPS_KEYSTORE_PASS%
+  set catalina_opts_tmp=%catalina_opts_tmp% -Doozie.https.ciphers=%OOZIE_HTTPS_CIPHERS%
 
   # add required native libraries such as compression codecs
   set catalina_opts_tmp=%catalina_opts_tmp% -Djava.library.path=%JAVA_LIBRARY_PATH%
