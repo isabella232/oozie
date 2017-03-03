@@ -38,6 +38,12 @@
     </properties>
 
     <dependencies>
+        
+        <dependency>
+            <artifactId>derby</artifactId>
+            <groupId>org.apache.derby</groupId>
+            <scope>compile</scope>
+        </dependency>
 
         <dependency>
             <groupId>com.google.guava</groupId>
