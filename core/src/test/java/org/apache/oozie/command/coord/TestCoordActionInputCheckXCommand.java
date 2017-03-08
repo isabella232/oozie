@@ -269,7 +269,7 @@ public class TestCoordActionInputCheckXCommand extends XDataTestCase {
         assertEquals(resolvedList, actionXML.substring(actionXML.indexOf("<uris>") + 6, actionXML.indexOf("</uris>")));
     }
 
-    public void testActionInputCheckLatestActionCreationTimeWithPushDependency() throws Exception {
+    public void __testActionInputCheckLatestActionCreationTimeWithPushDependency() throws Exception {
         setupServicesForHCatalog(services);
         Services.get().getConf().setBoolean(CoordELFunctions.LATEST_EL_USE_CURRENT_TIME, false);
         services.init();
@@ -833,7 +833,7 @@ public class TestCoordActionInputCheckXCommand extends XDataTestCase {
     }
 
     @Test
-    public void testNone() throws Exception {
+    public void __testNone() throws Exception {
         CoordinatorJobBean job = addRecordToCoordJobTableForWaiting("coord-job-for-action-input-check.xml",
                 CoordinatorJob.Status.RUNNING, false, true);
         job.setExecutionOrder(CoordinatorJobBean.Execution.NONE);

@@ -110,7 +110,7 @@ public class TestZKUtils extends ZKXTestCase {
         }
     }
 
-    public void testGetZKIdIndex() throws Exception {
+    public void __testGetZKIdIndex() throws Exception {
         DummyUser du = new DummyUser();
         DummyZKOozie dummyOozie = null;
         DummyZKOozie dummyOozie2 = null;

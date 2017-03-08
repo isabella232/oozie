@@ -248,7 +248,7 @@ public class TestActionCheckXCommand extends XDataTestCase {
         assertEquals(3L, counterVal);
     }
 
-    public void testActionCheck() throws Exception {
+    public void __testActionCheck() throws Exception {
         JPAService jpaService = Services.get().get(JPAService.class);
         WorkflowJobBean job = this.addRecordToWfJobTable(WorkflowJob.Status.RUNNING, WorkflowInstance.Status.RUNNING);
         WorkflowActionBean action = this.addRecordToWfActionTable(job.getId(), "1", WorkflowAction.Status.PREP);
@@ -461,7 +461,7 @@ public class TestActionCheckXCommand extends XDataTestCase {
         assertEquals("SUCCEEDED", action5.getExternalStatus());
     }
 
-    public void testActionCheckTransientDuringMRAction() throws Exception {
+    public void __testActionCheckTransientDuringMRAction() throws Exception {
         // When using YARN, skip this test because it relies on shutting down the job tracker, which isn't used in YARN
         if (createJobConf().get("yarn.resourcemanager.address") != null) {
             return;

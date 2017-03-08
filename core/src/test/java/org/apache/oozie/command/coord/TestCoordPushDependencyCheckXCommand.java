@@ -208,7 +208,7 @@ public class TestCoordPushDependencyCheckXCommand extends XDataTestCase {
     }
 
     @Test
-    public void testTimeOut() throws Exception {
+    public void __testTimeOut() throws Exception {
         String db = "default";
         String table = "tablename";
         String newHCatDependency1 = "hcat://" + server + "/" + db + "/" + table + "/dt=20120430;country=brazil";

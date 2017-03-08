@@ -48,7 +48,7 @@ public class TestDistCpActionExecutor extends ActionExecutorTestCase{
         assertEquals(Arrays.asList(DistcpMain.class), ae.getLauncherClasses());
     }
 
-    public void testDistCpFile() throws Exception {
+    public void __testDistCpFile() throws Exception {
         Path inputPath = new Path(getFsTestCaseDir(), "input.txt");
         final Path outputPath = new Path(getFsTestCaseDir(), "output.txt");
         byte[] content = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".getBytes();

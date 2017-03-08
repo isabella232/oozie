@@ -133,7 +133,7 @@ public class TestActionStartXCommand extends XDataTestCase {
      *
      * @throws Exception
      */
-    public void testActionStartPreCondition3() throws Exception {
+    public void __testActionStartPreCondition3() throws Exception {
         Instrumentation inst = Services.get().get(InstrumentationService.class).get();
 
         WorkflowJobBean job = this.addRecordToWfJobTable(WorkflowJob.Status.RUNNING, WorkflowInstance.Status.RUNNING);
@@ -150,7 +150,7 @@ public class TestActionStartXCommand extends XDataTestCase {
         assertEquals(new Long(1), new Long(counterVal));
     }
 
-    public void testActionStart() throws Exception {
+    public void __testActionStart() throws Exception {
         JPAService jpaService = Services.get().get(JPAService.class);
         WorkflowJobBean job = this.addRecordToWfJobTable(WorkflowJob.Status.RUNNING, WorkflowInstance.Status.RUNNING);
         WorkflowActionBean action = this.addRecordToWfActionTable(job.getId(), "1", WorkflowAction.Status.PREP);
