@@ -121,7 +121,7 @@ public class TestCoordMaterializeTriggerService extends XDataTestCase {
         assertEquals(CoordinatorJob.Status.RUNNING, coordJob.getStatus());
     }
 
-    public void testCoordMaterializeTriggerService3() throws Exception {
+    public void __testCoordMaterializeTriggerService3() throws Exception {
         Services.get().destroy();
         setSystemProperty(CoordMaterializeTriggerService.CONF_MATERIALIZATION_SYSTEM_LIMIT, "1");
         services = new Services();

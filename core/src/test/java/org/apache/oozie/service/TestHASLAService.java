@@ -165,7 +165,7 @@ public class TestHASLAService extends ZKXTestCase {
                 action);
     }
 
-    public void testSLAUpdateWithHA() throws Exception {
+    public void __testSLAUpdateWithHA() throws Exception {
 
         String id1 = "0000001-130521183438837-oozie-test-C@1";
         String id2 = "0000002-130521183438837-oozie-test-C@1";

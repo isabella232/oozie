@@ -154,7 +154,7 @@ public class TestPauseTransitService extends XDataTestCase {
      *
      * @throws Exception
      */
-    public void testPauseBundleAndCoordinator() throws Exception {
+    public void __testPauseBundleAndCoordinator() throws Exception {
         BundleJobBean job = this.addRecordToBundleJobTable(Job.Status.RUNNING, false);
         final JPAService jpaService = Services.get().get(JPAService.class);
         assertNotNull(jpaService);

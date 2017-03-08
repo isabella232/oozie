@@ -336,7 +336,7 @@ public class TestCoordKillXCommand extends XDataTestCase {
 
     }
 
-    public void testCoordKillXCommandUniqueness() throws Exception {
+    public void __testCoordKillXCommandUniqueness() throws Exception {
         String currentDatePlusMonth = XDataTestCase.getCurrentDateafterIncrementingInMonths(1);
         Date start = DateUtils.parseDateOozieTZ(currentDatePlusMonth);
         Date end = DateUtils.parseDateOozieTZ(currentDatePlusMonth);
