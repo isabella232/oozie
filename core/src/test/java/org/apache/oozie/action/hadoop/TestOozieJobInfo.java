@@ -71,6 +71,7 @@ import org.apache.oozie.test.XDataTestCase;
 import org.apache.oozie.util.IOUtils;
 import org.apache.oozie.util.XConfiguration;
 import org.apache.oozie.util.XmlUtils;
+import org.junit.Test;
 
 public class TestOozieJobInfo extends XDataTestCase {
 
@@ -282,5 +283,10 @@ public class TestOozieJobInfo extends XDataTestCase {
         bundle.setStatus(jobStatus);
         bundle.setUser(conf.get(OozieClient.USER_NAME));
         return bundle;
+    }
+
+    @Test
+    public void testPlaceholder() {
+        // NOP
     }
 }
