@@ -188,7 +188,7 @@ public class MiniHS2 extends AbstractHiveService {
 
   private void waitForStartup() throws Exception {
     int waitTime = 0;
-    long startupTimeout = 1000L * 1000000000L;
+    long startupTimeout = 30_000L;
     CLIServiceClient hs2Client = getServiceClientInternal();
     SessionHandle sessionHandle = null;
     do {
