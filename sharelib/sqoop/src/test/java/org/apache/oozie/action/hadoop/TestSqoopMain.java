@@ -29,7 +29,7 @@ public class TestSqoopMain extends XTestCase {
     public void testJobIDPattern() {
         List<String> lines = new ArrayList<String>();
         lines.add("Job complete: job_001");
-        lines.add("Job job_002 has completed successfully");
+        lines.add("Job job_002 completed successfully");
         lines.add("Submitted application application_003");
         // Non-matching ones
         lines.add("Job complete: application_004");
