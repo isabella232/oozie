@@ -36,6 +36,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.oozie.action.hadoop.security.LauncherSecurityManager;
 import org.apache.oozie.test.MiniHCatServer;
 import org.apache.oozie.util.XConfiguration;
+import org.apache.oozie.action.hadoop.LauncherAM.LauncherSecurityManager;
 
 public class TestHiveMain extends MainTestCase {
     @Override
@@ -74,109 +75,100 @@ public class TestHiveMain extends MainTestCase {
 
     @Override
     public Void call() throws Exception {
-        if (System.getenv("HADOOP_HOME") == null) {
-            System.out.println("WARNING: 'HADOOP_HOME' env var not defined, TestHiveMain test is not running");
-        }
-        else {
-            FileSystem fs = getFileSystem();
+        FileSystem fs = getFileSystem();
 
-            Path inputDir = new Path(getFsTestCaseDir(), "input");
-            fs.mkdirs(inputDir);
-            Writer writer = new OutputStreamWriter(fs.create(new Path(inputDir, "data.txt")));
-            writer.write("3\n4\n6\n1\n2\n7\n9\n0\n8\n");
-            writer.close();
+        Path inputDir = new Path(getFsTestCaseDir(), "input");
+        fs.mkdirs(inputDir);
+        Writer writer = new OutputStreamWriter(fs.create(new Path(inputDir, "data.txt")));
+        writer.write("3\n4\n6\n1\n2\n7\n9\n0\n8\n");
+        writer.close();
 
-            Path outputDir = new Path(getFsTestCaseDir(), "output");
+        Path outputDir = new Path(getFsTestCaseDir(), "output");
 
-            Path script = new Path(getTestCaseDir(), "script.q");
-            Writer w = new FileWriter(script.toString());
-            w.write(getHiveScript("${IN}", "${OUT}"));
-            w.close();
+        Path script = new Path(getTestCaseDir(), "script.q");
+        Writer w = new FileWriter(script.toString());
+        w.write(getHiveScript("${IN}", "${OUT}"));
+        w.close();
 
-            XConfiguration jobConf = new XConfiguration();
-            XConfiguration.copy(createJobConf(), jobConf);
+        XConfiguration jobConf = new XConfiguration();
+        XConfiguration.copy(createJobConf(), jobConf);
 
-            jobConf.set("oozie.hive.log.level", "DEBUG");
+        jobConf.set("oozie.hive.log.level", "DEBUG");
 
-            jobConf.set("user.name", getTestUser());
-            jobConf.set("group.name", getTestGroup());
-            jobConf.setInt("mapred.map.tasks", 1);
-            jobConf.setInt("mapred.map.max.attempts", 1);
-            jobConf.setInt("mapred.reduce.max.attempts", 1);
-            jobConf.set("javax.jdo.option.ConnectionURL", "jdbc:derby:" + getTestCaseDir() + "/db;create=true");
-            jobConf.set("javax.jdo.option.ConnectionDriverName", "org.apache.derby.jdbc.EmbeddedDriver");
-            jobConf.set("javax.jdo.option.ConnectionUserName", "sa");
-            jobConf.set("javax.jdo.option.ConnectionPassword", " ");
+        jobConf.set("user.name", getTestUser());
+        jobConf.set("group.name", getTestGroup());
+        jobConf.setInt("mapred.map.tasks", 1);
+        jobConf.setInt("mapred.map.max.attempts", 1);
+        jobConf.setInt("mapred.reduce.max.attempts", 1);
+        jobConf.set("javax.jdo.option.ConnectionURL", "jdbc:derby:" + getTestCaseDir() + "/db;create=true");
+        jobConf.set("javax.jdo.option.ConnectionDriverName", "org.apache.derby.jdbc.EmbeddedDriver");
+        jobConf.set("javax.jdo.option.ConnectionUserName", "sa");
+        jobConf.set("javax.jdo.option.ConnectionPassword", " ");
+        jobConf.set("datanucleus.schema.autoCreateTables", "true");
+        jobConf.set("hive.metastore.schema.verification", "false");
 
-            jobConf.set("mapreduce.job.tags", "" + System.currentTimeMillis());
-            setSystemProperty("oozie.job.launch.time", "" + System.currentTimeMillis());
+        jobConf.set("mapreduce.job.tags", "" + System.currentTimeMillis());
+        setSystemProperty("oozie.job.launch.time", "" + System.currentTimeMillis());
 
-            SharelibUtils.addToDistributedCache("hive", fs, getFsTestCaseDir(), jobConf);
+        SharelibUtils.addToDistributedCache("hive", fs, getFsTestCaseDir(), jobConf);
 
-            jobConf.set(HiveActionExecutor.HIVE_SCRIPT, script.toString());
-            ActionUtils.setStrings(jobConf, HiveActionExecutor.HIVE_PARAMS, new String[]{
+        jobConf.set(HiveActionExecutor.HIVE_SCRIPT, script.toString());
+        ActionUtils.setStrings(jobConf, HiveActionExecutor.HIVE_PARAMS, new String[]{
                 "IN=" + inputDir.toUri().getPath(),
                 "OUT=" + outputDir.toUri().getPath()});
-            ActionUtils.setStrings(jobConf, HiveActionExecutor.HIVE_ARGS,
+        ActionUtils.setStrings(jobConf, HiveActionExecutor.HIVE_ARGS,
                 new String[]{ "-v" });
 
-            File actionXml = new File(getTestCaseDir(), "action.xml");
-            OutputStream os = new FileOutputStream(actionXml);
+        File actionXml = new File(getTestCaseDir(), "action.xml");
+        OutputStream os = new FileOutputStream(actionXml);
+        jobConf.writeXml(os);
+        os.close();
+
+        //needed in the testcase classpath
+        URL url = Thread.currentThread().getContextClassLoader().getResource("HiveMain.txt");
+        File classPathDir = new File(url.getPath()).getParentFile();
+        assertTrue(classPathDir.exists());
+        Properties props = jobConf.toProperties();
+        assertEquals(props.getProperty("oozie.hive.args.size"), "1");
+        File hiveSite = new File(classPathDir, "hive-site.xml");
+
+        File externalChildIdsFile = new File(getTestCaseDir(), "externalChildIDs");
+
+        setSystemProperty("oozie.launcher.job.id", "" + System.currentTimeMillis());
+        setSystemProperty("oozie.action.conf.xml", actionXml.getAbsolutePath());
+        setSystemProperty("oozie.action.externalChildIDs", externalChildIdsFile.getAbsolutePath());
+
+        LauncherSecurityManager launcherSecurityManager = new LauncherSecurityManager();
+        launcherSecurityManager.enable();
+        String user = System.getProperty("user.name");
+        try {
+            os = new FileOutputStream(hiveSite);
             jobConf.writeXml(os);
             os.close();
-
-            //needed in the testcase classpath
-            URL url = Thread.currentThread().getContextClassLoader().getResource("HiveMain.txt");
-            File classPathDir = new File(url.getPath()).getParentFile();
-            assertTrue(classPathDir.exists());
-            Properties props = jobConf.toProperties();
-            assertEquals(props.getProperty("oozie.hive.args.size"), "1");
-            File hiveSite = new File(classPathDir, "hive-site.xml");
-
-            File externalChildIdsFile = new File(getTestCaseDir(), "externalChildIDs");
-
-            setSystemProperty("oozie.launcher.job.id", "" + System.currentTimeMillis());
-            setSystemProperty("oozie.action.conf.xml", actionXml.getAbsolutePath());
-            setSystemProperty("oozie.action.externalChildIDs", externalChildIdsFile.getAbsolutePath());
-
-            LauncherSecurityManager launcherSecurityManager = new LauncherSecurityManager();
-            launcherSecurityManager.enable();
-            String user = System.getProperty("user.name");
-            try {
-                os = new FileOutputStream(hiveSite);
-                jobConf.writeXml(os);
-                os.close();
-                MiniHCatServer.resetHiveConfStaticVariables();
-                HiveMain.main(null);
-            }
-            catch (SecurityException ex) {
-                if (launcherSecurityManager.getExitInvoked()) {
-                    System.out.println("Intercepting System.exit(" + launcherSecurityManager.getExitCode() + ")");
-                    System.err.println("Intercepting System.exit(" + launcherSecurityManager.getExitCode() + ")");
-                    if (launcherSecurityManager.getExitCode() != 0) {
-                        fail();
-                    }
-                }
-                else {
-                    throw ex;
-                }
-            }
-            finally {
-                System.setProperty("user.name", user);
-                hiveSite.delete();
-                MiniHCatServer.resetHiveConfStaticVariables();
-                launcherSecurityManager.disable();
-            }
-
-            assertTrue(externalChildIdsFile.exists());
-            assertNotNull(LauncherAMUtils.getLocalFileContentStr(externalChildIdsFile, "", -1));
-
-//TODO: I cannot figure out why when log file is not created in this testcase, it works when running in Launcher
-//            Properties props = new Properties();
-//            props.load(new FileReader(outputDataFile));
-//            assertTrue(props.containsKey(LauncherMain.HADOOP_JOBS));
-//            assertTrue(props.getProperty(LauncherMain.HADOOP_JOBS).trim().length() > 0);
+            MiniHCatServer.resetHiveConfStaticVariables();
+            HiveMain.main(null);
         }
+        catch (SecurityException ex) {
+            if (launcherSecurityManager.getExitInvoked()) {
+                System.out.println("Intercepting System.exit(" + launcherSecurityManager.getExitCode() + ")");
+                System.err.println("Intercepting System.exit(" + launcherSecurityManager.getExitCode() + ")");
+                if (launcherSecurityManager.getExitCode() != 0) {
+                    fail();
+                }
+            }
+            else {
+                throw ex;
+            }
+        }
+        finally {
+            System.setProperty("user.name", user);
+            hiveSite.delete();
+            MiniHCatServer.resetHiveConfStaticVariables();
+            launcherSecurityManager.disable();
+        }
+
+        assertTrue(externalChildIdsFile.exists());
+        assertNotNull(LauncherAMUtils.getLocalFileContentStr(externalChildIdsFile, "", -1));
         return null;
     }
 

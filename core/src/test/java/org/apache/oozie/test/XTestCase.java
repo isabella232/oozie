@@ -1142,6 +1142,8 @@ public abstract class XTestCase extends TestCase {
                 for (Map.Entry<String, String> pair : jobConf) {
                     hs2Config.set(pair.getKey(), pair.getValue());
                 }
+                hs2Config.set("datanucleus.schema.autoCreateTables", "true");
+                hs2Config.set("hive.metastore.schema.verification", "false");
             }
             hiveserver2 = new MiniHS2(hs2Config, dfsCluster.getFileSystem());
             hiveserver2.start(new HashMap<String, String>());

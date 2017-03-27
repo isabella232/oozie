@@ -95,6 +95,14 @@ public class TestHiveActionExecutor extends ActionExecutorTestCase {
         "<name>oozie.hive.log.level</name>" +
         "<value>DEBUG</value>" +
         "</property>" +
+        "<property>" +
+        "<name>datanucleus.schema.autoCreateTables</name>" +
+        "<value>true</value>" +
+        "</property>" +
+        "<property>" +
+        "<name>hive.metastore.schema.verification</name>" +
+        "<value>false</value>" +
+        "</property>" +
         "</configuration>" +
         "<script>" + HIVE_SCRIPT_FILENAME + "</script>" +
         "</hive>";
@@ -125,6 +133,14 @@ public class TestHiveActionExecutor extends ActionExecutorTestCase {
             "<property>" +
             "<name>oozie.hive.log.level</name>" +
             "<value>DEBUG</value>" +
+            "</property>" +
+            "<property>" +
+            "<name>datanucleus.schema.autoCreateTables</name>" +
+            "<value>true</value>" +
+            "</property>" +
+            "<property>" +
+            "<name>hive.metastore.schema.verification</name>" +
+            "<value>false</value>" +
             "</property>" +
             "</configuration>";
         return MessageFormat.format(script, getJobTrackerUri(), getNameNodeUri())

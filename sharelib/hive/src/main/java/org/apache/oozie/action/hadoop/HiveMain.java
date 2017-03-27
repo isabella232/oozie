@@ -21,13 +21,20 @@ package org.apache.oozie.action.hadoop;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
+import java.lang.reflect.Field;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Properties;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -35,6 +42,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.cli.CliDriver;
+import org.apache.hadoop.hive.common.LogUtils;
 import org.apache.hadoop.hive.conf.HiveConf;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -49,6 +57,8 @@ public class HiveMain extends LauncherMain {
 
     public static final String HIVE_L4J_PROPS = "hive-log4j.properties";
     public static final String HIVE_EXEC_L4J_PROPS = "hive-exec-log4j.properties";
+    public static final String HIVE_L4J2_XML = "hive-log4j2.xml";
+    public static final String HIVE_EXEC_L4J2_XML = "hive-exec-log4j2.xml";
     public static final String HIVE_SITE_CONF = "hive-site.xml";
 
     static {
@@ -69,7 +79,7 @@ public class HiveMain extends LauncherMain {
         run(HiveMain.class, args);
     }
 
-    private static Configuration initActionConf() throws java.io.IOException {
+    private Configuration initActionConf() throws java.io.IOException {
         // Loading action conf prepared by Oozie
         Configuration hiveConf = new Configuration(false);
 
@@ -125,7 +135,7 @@ public class HiveMain extends LauncherMain {
         return hiveConf;
     }
 
-    private String setUpHiveLog4J(Configuration hiveConf) throws IOException {
+    public String setUpHiveLoggingConfig(Configuration hiveConf, boolean usingLog4j2) throws IOException {
         //Logfile to capture job IDs
         String hadoopJobId = System.getProperty("oozie.launcher.job.id");
         if (hadoopJobId == null) {
@@ -134,42 +144,16 @@ public class HiveMain extends LauncherMain {
 
         String logFile = new File("hive-oozie-" + hadoopJobId + ".log").getAbsolutePath();
 
-        String logLevel = hiveConf.get("oozie.hive.log.level", "INFO");
-        String rootLogLevel = hiveConf.get("oozie.action." + LauncherAMUtils.ROOT_LOGGER_LEVEL, "INFO");
-
-        log4jProperties.setProperty("log4j.rootLogger", rootLogLevel + ", A");
-        log4jProperties.setProperty("log4j.logger.org.apache.hadoop.hive", logLevel + ", A");
-        log4jProperties.setProperty("log4j.additivity.org.apache.hadoop.hive", "false");
-        log4jProperties.setProperty("log4j.logger.hive", logLevel + ", A");
-        log4jProperties.setProperty("log4j.additivity.hive", "false");
-        log4jProperties.setProperty("log4j.logger.DataNucleus", logLevel + ", A");
-        log4jProperties.setProperty("log4j.additivity.DataNucleus", "false");
-        log4jProperties.setProperty("log4j.logger.DataStore", logLevel + ", A");
-        log4jProperties.setProperty("log4j.additivity.DataStore", "false");
-        log4jProperties.setProperty("log4j.logger.JPOX", logLevel + ", A");
-        log4jProperties.setProperty("log4j.additivity.JPOX", "false");
-        log4jProperties.setProperty("log4j.appender.A", "org.apache.log4j.ConsoleAppender");
-        log4jProperties.setProperty("log4j.appender.A.layout", "org.apache.log4j.PatternLayout");
-        log4jProperties.setProperty("log4j.appender.A.layout.ConversionPattern", "%d [%t] %-5p %c %x - %m%n");
-
-        log4jProperties.setProperty("log4j.appender.jobid", "org.apache.log4j.FileAppender");
-        log4jProperties.setProperty("log4j.appender.jobid.file", logFile);
-        log4jProperties.setProperty("log4j.appender.jobid.layout", "org.apache.log4j.PatternLayout");
-        log4jProperties.setProperty("log4j.appender.jobid.layout.ConversionPattern", "%d [%t] %-5p %c %x - %m%n");
-        log4jProperties.setProperty("log4j.logger.org.apache.hadoop.hive.ql.exec", "INFO, jobid");
-        log4jProperties.setProperty("log4j.additivity.org.apache.hadoop.hive.ql.exec", "false");
-        log4jProperties.setProperty("log4j.logger.SessionState", "INFO, jobid");
-        log4jProperties.setProperty("log4j.additivity.SessionState", "false");
-        log4jProperties.setProperty("log4j.logger.org.apache.hadoop.yarn.client.api.impl.YarnClientImpl", "INFO, jobid");
-        log4jProperties.setProperty("log4j.additivity.org.apache.hadoop.yarn.client.api.impl.YarnClientImpl", "false");
-
-        createFileWithContentIfNotExists(new File(HIVE_L4J_PROPS).getAbsolutePath(), log4jProperties);
-        createFileWithContentIfNotExists(new File(HIVE_EXEC_L4J_PROPS).getAbsolutePath(), log4jProperties);
+        if (usingLog4j2) {
+            setupHiveLog4j2Config(logFile, hiveConf);
+        } else {
+            setupHiveLog4jConfig(logFile, hiveConf);
+        }
 
         return logFile;
     }
 
-    public static Configuration setUpHiveSite() throws Exception {
+    public Configuration setUpHiveSite() throws Exception {
         Configuration hiveConf = initActionConf();
 
         // Write the action configuration out to hive-site.xml
@@ -193,11 +177,23 @@ public class HiveMain extends LauncherMain {
 
         List<String> arguments = new ArrayList<String>();
 
-        String logFile = setUpHiveLog4J(hiveConf);
+        boolean usingLog4j2 = isHiveUsingLog4j2();
+        String logFile = setUpHiveLoggingConfig(hiveConf, usingLog4j2);
+
+        String log4jFile;
+        String execLog4jFile;
+        if (usingLog4j2) {
+            log4jFile = HIVE_L4J2_XML;
+            execLog4jFile = HIVE_EXEC_L4J2_XML;
+        } else {
+            log4jFile = HIVE_L4J_PROPS;
+            execLog4jFile = HIVE_EXEC_L4J_PROPS;
+        }
+
         arguments.add("--hiveconf");
-        arguments.add("hive.log4j.file=" + new File(HIVE_L4J_PROPS).getAbsolutePath());
+        arguments.add("hive.log4j.file=" + new File(log4jFile).getAbsolutePath());
         arguments.add("--hiveconf");
-        arguments.add("hive.exec.log4j.file=" + new File(HIVE_EXEC_L4J_PROPS).getAbsolutePath());
+        arguments.add("hive.exec.log4j.file=" + new File(execLog4jFile).getAbsolutePath());
 
         //setting oozie workflow id as caller context id for hive
         String callerId = "oozie:" + System.getProperty(LauncherAM.OOZIE_JOB_ID);
@@ -299,6 +295,77 @@ public class HiveMain extends LauncherMain {
         }
     }
 
+    private void setupHiveLog4jConfig(String logFile, Configuration hiveConf) throws IOException {
+        Properties hadoopProps = new Properties();
+
+        // Preparing log4j configuration
+        URL log4jFile = Thread.currentThread().getContextClassLoader().getResource("log4j.properties");
+        if (log4jFile != null) {
+            // getting hadoop log4j configuration
+            hadoopProps.load(log4jFile.openStream());
+        }
+
+        String logLevel = hiveConf.get("oozie.hive.log.level", "INFO");
+        String rootLogLevel = hiveConf.get("oozie.action." + LauncherAMUtils.ROOT_LOGGER_LEVEL, "INFO");
+
+        hadoopProps.setProperty("log4j.rootLogger", rootLogLevel + ", A");
+        hadoopProps.setProperty("log4j.logger.org.apache.hadoop.hive", logLevel + ", A");
+        hadoopProps.setProperty("log4j.additivity.org.apache.hadoop.hive", "false");
+        hadoopProps.setProperty("log4j.logger.hive", logLevel + ", A");
+        hadoopProps.setProperty("log4j.additivity.hive", "false");
+        hadoopProps.setProperty("log4j.logger.DataNucleus", logLevel + ", A");
+        hadoopProps.setProperty("log4j.additivity.DataNucleus", "false");
+        hadoopProps.setProperty("log4j.logger.DataStore", logLevel + ", A");
+        hadoopProps.setProperty("log4j.additivity.DataStore", "false");
+        hadoopProps.setProperty("log4j.logger.JPOX", logLevel + ", A");
+        hadoopProps.setProperty("log4j.additivity.JPOX", "false");
+        hadoopProps.setProperty("log4j.appender.A", "org.apache.log4j.ConsoleAppender");
+        hadoopProps.setProperty("log4j.appender.A.layout", "org.apache.log4j.PatternLayout");
+        hadoopProps.setProperty("log4j.appender.A.layout.ConversionPattern", "%d [%t] %-5p %c %x - %m%n");
+
+        hadoopProps.setProperty("log4j.appender.jobid", "org.apache.log4j.FileAppender");
+        hadoopProps.setProperty("log4j.appender.jobid.file", logFile);
+        hadoopProps.setProperty("log4j.appender.jobid.layout", "org.apache.log4j.PatternLayout");
+        hadoopProps.setProperty("log4j.appender.jobid.layout.ConversionPattern", "%d [%t] %-5p %c %x - %m%n");
+        hadoopProps.setProperty("log4j.logger.org.apache.hadoop.hive.ql.exec", "INFO, jobid");
+        hadoopProps.setProperty("log4j.logger.SessionState", "INFO, jobid");
+        hadoopProps.setProperty("log4j.logger.org.apache.hadoop.yarn.client.api.impl.YarnClientImpl", "INFO, jobid");
+
+        createFileWithContentIfNotExists(new File(HIVE_L4J_PROPS).getAbsolutePath(), hadoopProps);
+        createFileWithContentIfNotExists(new File(HIVE_EXEC_L4J_PROPS).getAbsolutePath(), hadoopProps);
+
+    }
+
+    private void setupHiveLog4j2Config(String logFile, Configuration hiveConf) throws IOException {
+        String rootLogLevel = hiveConf.get("oozie.action." + LauncherAMUtils.ROOT_LOGGER_LEVEL, "INFO");
+
+        String log4jConfig =
+                        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"             +
+                        "<Configuration status=\"WARN\">"                        +
+                        "  <Appenders>"                                          +
+                        "    <Console name=\"Console\" target=\"SYSTEM_OUT\">"   +
+                        "      <PatternLayout pattern=\"%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n\"/>" +
+                        "   </Console>"                                          +
+                        "    <File name=\"File\" fileName=\"" + logFile + "\">"  +
+                        "       <PatternLayout pattern=\"%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n\"/>" +
+                        "    </File>"                                            +
+                        "  </Appenders>"                                         +
+                        "  <Loggers>"                                            +
+                        "    <Root level=\"" + rootLogLevel + "\">"              +
+                        "      <AppenderRef ref=\"Console\"/> "                  +
+                        "      <AppenderRef ref=\"File\"/> "                     +
+                        "    </Root>"                                            +
+                        "  </Loggers>"                                           +
+                        "</Configuration>";
+
+        // String logLevel = hiveConf.get("oozie.hive.log.level", "INFO");
+        String localProps = new File(HIVE_L4J2_XML).getAbsolutePath();
+        writeLog4jConfig(log4jConfig, localProps);
+
+        localProps = new File(HIVE_EXEC_L4J2_XML).getAbsolutePath();
+        writeLog4jConfig(log4jConfig, localProps);
+    }
+
     private String createScriptFile(String query) throws IOException {
         String filename = "oozie-hive-query-" + System.currentTimeMillis() + ".hql";
         File f = new File(filename);
@@ -310,7 +377,7 @@ public class HiveMain extends LauncherMain {
         CliDriver.main(args);
     }
 
-    private static String readStringFromFile(String filePath) throws IOException {
+    private String readStringFromFile(String filePath) throws IOException {
         String line;
         BufferedReader br = null;
         try {
@@ -328,4 +395,25 @@ public class HiveMain extends LauncherMain {
             }
         }
      }
+
+    // Determine whether Hive uses Log4j or Log4j2
+    private boolean isHiveUsingLog4j2() {
+        try {
+            Field hiveLog4jField = LogUtils.class.getDeclaredField("HIVE_L4J");
+            hiveLog4jField.setAccessible(true);
+            String hiveLog4jFieldValue = (String) hiveLog4jField.get(null);
+
+            return (hiveLog4jFieldValue != null && hiveLog4jFieldValue.contains("hive-log4j2.properties"));
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("Unable to determine whether Hive uses Log4j or Log4j2 -- assuming Log4j2");
+            return true;
+        }
+    }
+
+    private void writeLog4jConfig(String logFileContents, String fileName) throws IOException {
+        Writer writer = new OutputStreamWriter(new FileOutputStream(fileName), StandardCharsets.UTF_8);
+        writer.write(logFileContents);
+        writer.close();
+    }
 }
