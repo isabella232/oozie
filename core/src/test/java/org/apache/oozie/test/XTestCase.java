@@ -1019,7 +1019,7 @@ public abstract class XTestCase extends TestCase {
           sb.append(",").append(i.getCanonicalHostName());
       }
       conf.set("hadoop.proxyuser." + getOozieUser() + ".hosts", sb.toString());
-      conf.set("hadoop.proxyuser." + getOozieUser() + ".groups", getTestGroup());
+      conf.set("hadoop.proxyuser." + getOozieUser() + ".groups", "*");
       conf.set("mapred.tasktracker.map.tasks.maximum", "4");
       conf.set("mapred.tasktracker.reduce.tasks.maximum", "4");
       conf.set("hadoop.tmp.dir", "target/test-data"+"/minicluster");
