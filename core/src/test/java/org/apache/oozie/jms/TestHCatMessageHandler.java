@@ -184,7 +184,7 @@ public class TestHCatMessageHandler extends XDataTestCase {
             hcatHandler.process(msg);
             //check logs to see appropriate error message
             String logMsg = out.toString();
-            assertTrue(logMsg.contains(HCatEventMessage.EventType.DROP_PARTITION.toString()));
+            assertTrue(logMsg, logMsg.contains(HCatEventMessage.EventType.DROP_PARTITION.toString()));
 
             msg.setStringProperty(HCatConstants.HCAT_EVENT, HCatEventMessage.EventType.DROP_TABLE.toString());
             hcatHandler.process(msg);
