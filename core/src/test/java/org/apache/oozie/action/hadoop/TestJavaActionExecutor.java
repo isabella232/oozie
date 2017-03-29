@@ -85,6 +85,7 @@ import org.apache.oozie.workflow.WorkflowLib;
 import org.apache.oozie.workflow.lite.EndNodeDef;
 import org.apache.oozie.workflow.lite.LiteWorkflowApp;
 import org.apache.oozie.workflow.lite.StartNodeDef;
+import org.apache.parquet.Strings;
 import org.jdom.Element;
 import org.junit.Assert;
 import org.junit.Test;
@@ -114,6 +115,18 @@ public class TestJavaActionExecutor extends ActionExecutorTestCase {
         OutputStream os = new FileOutputStream(new File(getTestCaseConfDir() + "/action-conf", "java.xml"));
         IOUtils.copyStream(is, os);
 
+    }
+
+    @Override
+    protected void afterSetUp() throws Exception {
+        setupHadoopMapredConf();
+    }
+
+    private void setupHadoopMapredConf() {
+        final Configuration cachedConf = Services.get().get(HadoopAccessorService.class).getCachedConf();
+        if (Strings.isNullOrEmpty(cachedConf.get(MAPRED_CHILD_JAVA_OPTS))) {
+            cachedConf.set(MAPRED_CHILD_JAVA_OPTS, "-Xmx200m");
+        }
     }
 
     public void testSetupMethods() throws Exception {
@@ -283,7 +296,6 @@ public class TestJavaActionExecutor extends ActionExecutorTestCase {
         assertTrue(conf.get(MAPRED_CHILD_JAVA_OPTS).contains("JAVA-OPTS"));
         assertTrue(conf.get(MAPREDUCE_MAP_JAVA_OPTS).contains("JAVA-OPTS"));
         assertEquals(Arrays.asList("A1", "A2"), Arrays.asList(LauncherAMUtils.getMainArguments(conf)));
-
         actionXml = XmlUtils.parseXml("<java>" + "<job-tracker>" + getJobTrackerUri() + "</job-tracker>" +
                 "<name-node>" + getNameNodeUri() + "</name-node> <configuration>" +
                 "<property><name>mapred.job.queue.name</name><value>AQ</value></property>" +
@@ -386,6 +398,7 @@ public class TestJavaActionExecutor extends ActionExecutorTestCase {
         assertEquals(WorkflowAction.Status.OK, context.getAction().getStatus());
     }
 
+
     public void testOutputSubmitOK() throws Exception {
         String actionXml = "<java>" +
                 "<job-tracker>" + getJobTrackerUri() + "</job-tracker>" +
@@ -409,7 +422,6 @@ public class TestJavaActionExecutor extends ActionExecutorTestCase {
         ae.end(context, context.getAction());
         assertEquals(WorkflowAction.Status.OK, context.getAction().getStatus());
     }
-
 
     public void testIdSwapSubmitOK() throws Exception {
         String actionXml = "<java>" +
@@ -550,6 +562,7 @@ public class TestJavaActionExecutor extends ActionExecutorTestCase {
         assertEquals(WorkflowAction.Status.ERROR, context.getAction().getStatus());
     }
 
+
     public void testKill() throws Exception {
         String actionXml = "<java>" +
                 "<job-tracker>" + getJobTrackerUri() + "</job-tracker>" +
@@ -565,7 +578,6 @@ public class TestJavaActionExecutor extends ActionExecutorTestCase {
         assertTrue(ae.isCompleted(context.getAction().getExternalStatus()));
         waitUntilYarnAppKilledAndAssertSuccess(runningJob);
     }
-
 
     public void testRecovery() throws Exception {
         final String actionXml = "<java>" +
@@ -927,6 +939,7 @@ public class TestJavaActionExecutor extends ActionExecutorTestCase {
         assertEquals(InsertTestToken.DUMMY_SECRET_KEY, new String(secKey, "UTF-8"));
     }
 
+
     public void testCredentialsInvalid() throws Exception {
         String workflowXml = "<workflow-app xmlns='uri:oozie:workflow:0.2.5' name='pig-wf'>" + "<credentials>"
                 + "<credential name='abcname' type='abc'>" + "<property>" + "<name>property1</name>"
@@ -964,7 +977,6 @@ public class TestJavaActionExecutor extends ActionExecutorTestCase {
             assertEquals(e.getErrorCode(), "JA021");
         }
     }
-
 
     public void testCredentialsWithoutCredTag() throws Exception {
         // create a workflow with credentials

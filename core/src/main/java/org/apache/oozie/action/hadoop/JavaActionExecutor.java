@@ -45,6 +45,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import avro.shaded.com.google.common.collect.Lists;
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.filecache.DistributedCache;
@@ -1100,6 +1101,7 @@ public class JavaActionExecutor extends ActionExecutor {
         setResources(launcherJobConf, appContext);
         setPriority(launcherJobConf, appContext);
         setQueue(launcherJobConf, appContext);
+
         appContext.setApplicationId(appId);
         setApplicationName(actionContext, actionName, appContext);
         appContext.setApplicationType("Oozie Launcher");
