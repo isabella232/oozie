@@ -66,12 +66,16 @@ public abstract class ActionExecutorTestCase extends XHCatTestCase {
         super.setUp();
         setSystemProps();
         new Services().init();
+        afterSetUp();
     }
 
     protected void setSystemProps() throws Exception {
     }
 
     protected void beforeSetUp() throws Exception {
+    }
+
+    protected void afterSetUp() throws Exception {
     }
 
     @Override

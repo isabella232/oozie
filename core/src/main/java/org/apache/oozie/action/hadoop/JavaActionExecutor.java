@@ -1124,6 +1124,7 @@ public class JavaActionExecutor extends ActionExecutor {
         setResources(launcherJobConf, appContext);
         setPriority(launcherJobConf, appContext);
         setQueue(launcherJobConf, appContext);
+
         appContext.setApplicationId(appId);
         setApplicationName(actionContext, actionName, appContext);
         appContext.setApplicationType("Oozie Launcher");
