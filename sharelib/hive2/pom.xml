@@ -187,6 +187,10 @@
                     <artifactId>derby</artifactId>
                     <groupId>org.apache.derby</groupId>
                 </exclusion>
+                <exclusion>
+                    <artifactId>jython-standalone</artifactId>
+                    <groupId>org.python</groupId>
+                </exclusion>
             </exclusions>
         </dependency>
 
