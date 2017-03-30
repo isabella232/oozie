@@ -19,8 +19,6 @@
 package org.apache.oozie.service;
 
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.ipc.RemoteException;
-import org.apache.hadoop.security.authorize.AuthorizationException;
 import org.apache.hadoop.yarn.api.records.LocalResource;
 import org.apache.hadoop.yarn.api.records.LocalResourceType;
 import org.apache.hadoop.yarn.api.records.LocalResourceVisibility;
@@ -28,7 +26,6 @@ import org.apache.hadoop.yarn.client.api.YarnClient;
 import org.apache.hadoop.yarn.util.ConverterUtils;
 import org.apache.oozie.test.XFsTestCase;
 import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.io.Text;
 import org.apache.oozie.util.IOUtils;
@@ -160,15 +157,6 @@ public class TestHadoopAccessorService extends XFsTestCase {
         assertNotNull(yc);
         yc.getApplications();
 
-        try {
-            yc = has.createYarnClient("invalid-user", conf);
-            assertNotNull(yc);
-            yc.getApplications();
-            fail("Should have thrown exception because not allowed to impersonate 'invalid-user'");
-        }
-        catch (AuthorizationException ex) {
-        }
-
         JobConf conf2 = new JobConf(false);
         conf2.set("yarn.resourcemanager.address", getJobTrackerUri());
         try {
@@ -188,15 +176,10 @@ public class TestHadoopAccessorService extends XFsTestCase {
         assertNotNull(fs);
         fs.exists(new Path(getNameNodeUri(), "/foo"));
 
-        try {
-            fs = has.createFileSystem("invalid-user", new URI(getNameNodeUri()), conf);
-            assertNotNull(fs);
-            fs.exists(new Path(getNameNodeUri(), "/foo"));
-            fail("Should have thrown exception because not allowed to impersonate 'invalid-user'");
-        }
-        catch (RemoteException ex) {
-            assertEquals(AuthorizationException.class.getName(), ex.getClassName());
-        }
+        fs = has.createFileSystem("invalid-user", new URI(getNameNodeUri()), conf);
+        assertNotNull(fs);
+        final boolean doesntExist = !fs.exists(new Path(getNameNodeUri(), "/foo"));
+        assertTrue("Hadoop doesn't throw an Exception when user is not authorized and exists() is called", doesntExist);
 
         JobConf conf2 = new JobConf(false);
         conf2.set("fs.default.name", getNameNodeUri());
