@@ -27,6 +27,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.StringWriter;
+import java.net.URL;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -35,6 +37,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.google.common.annotations.VisibleForTesting;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.Shell;
@@ -55,9 +58,58 @@ public abstract class LauncherMain {
     protected static String[] HADOOP_SITE_FILES = new String[]
             {"core-site.xml", "hdfs-site.xml", "mapred-site.xml", "yarn-site.xml"};
 
+    /**
+     * Hadoop's {@code log4j.properties} found on the classpath, if readable and present.
+     */
+    private static final String HADOOP_LOG4J_LOCATION = "log4j.properties";
+
+    /**
+     * Default {@code log4j.properties}, if Hadoop's one is not present or readable.
+     * <p>
+     * Its contents are mostly from Hadoop's {@code default-log4j.properties}.
+     */
+    private static final String DEFAULT_LOG4J_LOCATION = "default-log4j.properties";
+
+    protected Properties log4jProperties = new Properties();
+
     protected static void run(Class<? extends LauncherMain> klass, String[] args) throws Exception {
         LauncherMain main = klass.newInstance();
+        main.setupLog4jProperties();
         main.run(args);
+    }
+
+    @VisibleForTesting
+    protected void setupLog4jProperties() {
+        if (tryLoadLog4jPropertiesFromResource(HADOOP_LOG4J_LOCATION)) {
+            return;
+        }
+
+        tryLoadLog4jPropertiesFromResource(DEFAULT_LOG4J_LOCATION);
+    }
+
+    private boolean tryLoadLog4jPropertiesFromResource(final String log4jLocation) {
+        System.out.println(String.format("INFO: loading log4j config file %s.", log4jLocation));
+        final URL log4jUrl = Thread.currentThread().getContextClassLoader().getResource(log4jLocation);
+        if (log4jUrl != null) {
+            try (final InputStream log4jStream = log4jUrl.openStream()) {
+                log4jProperties.load(log4jStream);
+
+                System.out.println(String.format("INFO: log4j config file %s loaded successfully.", log4jLocation));
+                return true;
+            } catch (final IOException e) {
+                System.out.println(
+                        String.format("WARN: log4j config file %s is not readable. Exception message is: %s",
+                                log4jLocation,
+                                e.getMessage()));
+                e.printStackTrace(System.out);
+            }
+        }
+        else {
+            System.out.println(String.format("WARN: log4j config file %s is not present.", log4jLocation));
+        }
+
+        System.out.println(String.format("INFO: log4j config file %s could not be loaded.", log4jLocation));
+        return false;
     }
 
     protected static String getHadoopJobIds(String logFile, Pattern[] patterns) {
@@ -258,6 +310,17 @@ public abstract class LauncherMain {
                 }
             }
         }
+    }
+
+    protected void writeHadoopConfig(String actionXml, File basrDir) throws IOException {
+        File actionXmlFile = new File(actionXml);
+        System.out.println("Copying " + actionXml + " to " + basrDir + "/" + Arrays.toString(HADOOP_SITE_FILES));
+        basrDir.mkdirs();
+        File[] dstFiles = new File[HADOOP_SITE_FILES.length];
+        for (int i = 0; i < dstFiles.length; i++) {
+            dstFiles[i] = new File(basrDir, HADOOP_SITE_FILES[i]);
+        }
+        copyFileMultiplex(actionXmlFile, dstFiles);
     }
 }
 

@@ -18,18 +18,30 @@
 
 package org.apache.oozie.action.hadoop;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.regex.Pattern;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
+import org.apache.log4j.PropertyConfigurator;
+import org.apache.oozie.action.hadoop.LauncherMapper;
 
 public class DistcpMain extends JavaMain {
 
     private Constructor<?> construct;
     private Object[] constArgs;
-
+    private static final String DISTCP_LOG4J_PROPS = "distcp-log4j.properties";
+    private static final Pattern[] DISTCP_JOB_IDS_PATTERNS = {
+            Pattern.compile("Job complete: (job_\\S*)"),
+            Pattern.compile("Job (job_\\S*) completed successfully"),
+            Pattern.compile("Submitted application (application[0-9_]*)")
+    };
     public static void main(String[] args) throws Exception {
         run(DistcpMain.class, args);
     }
@@ -39,6 +51,7 @@ public class DistcpMain extends JavaMain {
 
         Configuration actionConf = loadActionConf();
         LauncherMainHadoopUtils.killChildYarnJobs(actionConf);
+        String logFile = setUpDistcpLog4J(actionConf);
         Class<?> klass = actionConf.getClass(LauncherMapper.CONF_OOZIE_ACTION_MAIN_CLASS,
                 org.apache.hadoop.tools.DistCp.class);
         System.out.println("Main class        : " + klass.getName());
@@ -69,8 +82,10 @@ public class DistcpMain extends JavaMain {
         catch (InvocationTargetException ex) {
             throw new JavaMainException(ex.getCause());
         }
-
-        System.out.println("\n<<< Invocation of DistCp command completed <<<\n");
+        finally {
+            System.out.println("\n<<< Invocation of DistCp command completed <<<\n");
+            writeExternalChildIDs(logFile, DISTCP_JOB_IDS_PATTERNS, "Distcp");
+        }
     }
 
     protected void getConstructorAndArgs(Class<?> klass, Configuration actionConf) throws Exception {
@@ -95,5 +110,42 @@ public class DistcpMain extends JavaMain {
                 break;
             }
         }
+    }
+
+    private String setUpDistcpLog4J(Configuration distcpConf) throws IOException {
+        // Logfile to capture job IDs
+        String hadoopJobId = System.getProperty("oozie.launcher.job.id");
+        if (hadoopJobId == null) {
+            throw new RuntimeException("Launcher Hadoop Job ID system,property not set");
+        }
+
+        String logFile = new File("distcp-oozie-" + hadoopJobId + ".log").getAbsolutePath();
+
+        String logLevel = distcpConf.get("oozie.distcp.log.level", "INFO");
+        String rootLogLevel = distcpConf.get("oozie.action." + LauncherMapper.ROOT_LOGGER_LEVEL, "INFO");
+
+        log4jProperties.setProperty("log4j.rootLogger", rootLogLevel + ", A");
+        log4jProperties.setProperty("log4j.logger.org.apache.hadoop.tools", logLevel + ", A, jobid");
+        log4jProperties.setProperty("log4j.additivity.org.apache.hadoop.tools", "false");
+        log4jProperties.setProperty("log4j.appender.A", "org.apache.log4j.ConsoleAppender");
+        log4jProperties.setProperty("log4j.appender.A.layout", "org.apache.log4j.PatternLayout");
+        log4jProperties.setProperty("log4j.appender.A.layout.ConversionPattern", "%-4r [%t] %-5p %c %x - %m%n");
+
+        log4jProperties.setProperty("log4j.appender.jobid", "org.apache.log4j.FileAppender");
+        log4jProperties.setProperty("log4j.appender.jobid.file", logFile);
+        log4jProperties.setProperty("log4j.appender.jobid.layout", "org.apache.log4j.PatternLayout");
+        log4jProperties.setProperty("log4j.appender.jobid.layout.ConversionPattern", "%-4r [%t] %-5p %c %x - %m%n");
+        log4jProperties.setProperty("log4j.logger.org.apache.hadoop.mapred", "INFO, jobid");
+        log4jProperties.setProperty("log4j.logger.org.apache.hadoop.mapreduce.Job", "INFO, jobid");
+        log4jProperties.setProperty("log4j.logger.org.apache.hadoop.yarn.client.api.impl.YarnClientImpl", "INFO, jobid");
+
+        String localProps = new File(DISTCP_LOG4J_PROPS).getAbsolutePath();
+        try (OutputStream os1 = new FileOutputStream(localProps)) {
+            log4jProperties.store(os1, "");
+        }
+
+        PropertyConfigurator.configure(DISTCP_LOG4J_PROPS);
+
+        return logFile;
     }
 }
