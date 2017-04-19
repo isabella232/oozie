@@ -2812,4 +2812,18 @@ public class TestJavaActionExecutor extends ActionExecutorTestCase {
         });
         assertTrue(runningJob.isSuccessful());
     }
+
+    public void testMaxOutputDataSetByUser() {
+        Configuration conf = new Configuration(false);
+        conf.set("oozie.action.max.output.data", "10000");
+
+        assertEquals(10000, JavaActionExecutor.getMaxOutputData(conf));
+    }
+
+    public void testInvalidMaxOutputDataSetByUser() {
+        Configuration conf = new Configuration(false);
+        conf.set("oozie.action.max.output.data", "sdasda");
+
+        assertEquals(2048, JavaActionExecutor.getMaxOutputData(conf));
+    }
 }
