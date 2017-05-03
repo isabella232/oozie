@@ -2928,7 +2928,7 @@ will be the requeue interval for the actions which are waiting for a long time w
 
     <property>
         <name>oozie.service.SparkConfigurationService.spark.configurations.blacklist</name>
-        <value>spark.yarn.jar,spark.yarn.jars</value>
+        <value>spark.yarn.jar,spark.yarn.jars,spark.hadoop.yarn.application.classpath,spark.hadoop.mapreduce.application.classpath,spark.submit.deployMode</value>
         <description>
              Comma separated list of properties to ignore from any Spark configurations specified in
              oozie.service.SparkConfigurationService.spark.configurations property.
