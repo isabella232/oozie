@@ -42,8 +42,10 @@ import java.util.regex.Pattern;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.primitives.Ints;
+import org.apache.directory.api.util.Strings;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.filecache.DistributedCache;
+import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -51,6 +53,7 @@ import org.apache.hadoop.fs.permission.AccessControlException;
 import org.apache.hadoop.mapreduce.security.token.delegation.DelegationTokenIdentifier;
 import org.apache.oozie.hadoop.utils.HadoopShims;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.JobID;
@@ -67,8 +70,6 @@ import org.apache.oozie.client.OozieClient;
 import org.apache.oozie.client.WorkflowAction;
 import org.apache.oozie.client.WorkflowJob;
 import org.apache.oozie.command.coord.CoordActionStartXCommand;
-import org.apache.oozie.command.wf.ActionStartXCommand;
-import org.apache.oozie.client.WorkflowJob;
 import org.apache.oozie.service.ConfigurationService;
 import org.apache.oozie.service.HadoopAccessorException;
 import org.apache.oozie.service.HadoopAccessorService;
@@ -1017,11 +1018,63 @@ public class JavaActionExecutor extends ActionExecutor {
             // maybe we should add queue to the WF schema, below job-tracker
             actionConfToLauncherConf(actionConf, launcherJobConf);
 
+            checkAndSetupLauncherInputFormat(launcherJobConf);
+
             return launcherJobConf;
         }
         catch (Exception ex) {
             throw convertException(ex);
         }
+    }
+
+    private void checkAndSetupLauncherInputFormat(final JobConf launcherJobConf) throws ActionExecutorException {
+        final Class inputFormatClass = launcherInputFormatClassLocator.locateOrGet();
+        LOG.debug("Launcher input format class is [{0}]", inputFormatClass.getName());
+
+        if (!inputFormatClass.equals(OozieLauncherInputFormat.class) && FileInputFormat.class.isAssignableFrom(inputFormatClass)) {
+            final String lastSharelibJarFullPath = getLastHDFSClasspathURI(launcherJobConf);
+            LOG.debug("Adding placeholder input path [{0}] for launcher input format [{1}] " +
+                            "to work correctly as a FileInputFormat",
+                    lastSharelibJarFullPath, inputFormatClass);
+            FileInputFormat.addInputPath(launcherJobConf, new Path(lastSharelibJarFullPath));
+        }
+    }
+
+    @VisibleForTesting
+    String getLastHDFSClasspathURI(final Configuration jobConf) throws ActionExecutorException {
+        LOG.debug("Get last HDFS classpath URI");
+
+        final String mrJobClasspathFiles = jobConf.get("mapreduce.job.classpath.files");
+        final String fsRootURI = jobConf.get(CommonConfigurationKeysPublic.FS_DEFAULT_NAME_KEY);
+
+        if (Strings.isEmpty(mrJobClasspathFiles) || Strings.isEmpty(fsRootURI)) {
+            throw new ActionExecutorException(ActionExecutorException.ErrorType.ERROR, "ALL",
+                    "Error submitting launcher. JobConf not configured correctly, cannot find last HDFS classpath URI.");
+        }
+
+        String lastHDFSClasspathURI = null;
+
+        final String[] classpathURIs = mrJobClasspathFiles.split(",");
+        int reverseIndex = classpathURIs.length - 1;
+
+        while (lastHDFSClasspathURI == null && reverseIndex >= 0) {
+            final String classpathURI = classpathURIs[reverseIndex];
+
+            if (classpathURI.contains(fsRootURI)) {
+                lastHDFSClasspathURI = classpathURI.replace(fsRootURI, "");
+            }
+
+            reverseIndex--;
+        }
+
+        if (Strings.isEmpty(lastHDFSClasspathURI)) {
+            throw new ActionExecutorException(ActionExecutorException.ErrorType.ERROR, "ALL",
+                    "Error submitting launcher. JobConf not configured correctly, there are no classpath entries stored on HDFS.");
+        }
+
+        LOG.debug("Last HDFS classpath URI is [{0}]", lastHDFSClasspathURI);
+
+        return lastHDFSClasspathURI;
     }
 
     @VisibleForTesting

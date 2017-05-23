@@ -40,6 +40,7 @@ import java.util.Set;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.examples.SleepJob;
 import org.apache.hadoop.filecache.DistributedCache;
+import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
@@ -2923,5 +2924,70 @@ public class TestJavaActionExecutor extends ActionExecutorTestCase {
         conf.set("oozie.action.max.output.data", "sdasda");
 
         assertEquals(2048, JavaActionExecutor.getMaxOutputData(conf));
+    }
+
+    public void testLastHDFSClasspathURIConfigurationKeysMissing(){
+        final Configuration conf = new Configuration(false);
+
+        final JavaActionExecutor jae = new JavaActionExecutor();
+
+        try {
+            jae.getLastHDFSClasspathURI(conf);
+
+            fail("Should throw an ActionExecutorException");
+        } catch (final ActionExecutorException e) {
+            assertEquals(e.getErrorType(), ActionExecutorException.ErrorType.ERROR);
+            assertEquals(e.getErrorCode(), "ALL");
+        }
+    }
+
+    public void testLastHDFSClasspathURIConfigurationKeysWithWrongValue(){
+        final Configuration conf = new Configuration(false);
+        conf.set("mapreduce.job.classpath.files", "");
+        conf.set(CommonConfigurationKeysPublic.FS_DEFAULT_NAME_KEY, "");
+
+        final JavaActionExecutor jae = new JavaActionExecutor();
+
+        try {
+            jae.getLastHDFSClasspathURI(conf);
+
+            fail("Should throw an ActionExecutorException");
+        } catch (final ActionExecutorException e) {
+            assertEquals(e.getErrorType(), ActionExecutorException.ErrorType.ERROR);
+            assertEquals(e.getErrorCode(), "ALL");
+        }
+    }
+
+    public void testLastHDFSClasspathURIPresentButMalformed() {
+        final Configuration conf = new Configuration(false);
+        conf.set("mapreduce.job.classpath.files", "classpath-1.jar,classpath-2.jar");
+        conf.set(CommonConfigurationKeysPublic.FS_DEFAULT_NAME_KEY, "hdfs://localhost:8020");
+
+        final JavaActionExecutor jae = new JavaActionExecutor();
+
+        try {
+            jae.getLastHDFSClasspathURI(conf);
+
+            fail("Should throw an ActionExecutorException");
+        } catch (final ActionExecutorException e) {
+            assertEquals(e.getErrorType(), ActionExecutorException.ErrorType.ERROR);
+            assertEquals(e.getErrorCode(), "ALL");
+        }
+    }
+
+    public void testLastHDFSClasspathURIPresentAndWellFormed() {
+        final Configuration conf = new Configuration(false);
+        conf.set("mapreduce.job.classpath.files", "hdfs://localhost:8020/classpath-1.jar,hdfs://localhost:8020/classpath-2.jar");
+        conf.set(CommonConfigurationKeysPublic.FS_DEFAULT_NAME_KEY, "hdfs://localhost:8020");
+
+        final JavaActionExecutor jae = new JavaActionExecutor();
+
+        try {
+            assertEquals("/classpath-2.jar", jae.getLastHDFSClasspathURI(conf));
+
+            conf.set("mapreduce.job.classpath.files", "hdfs://localhost:8020/classpath-1.jar,classpath-2.jar");
+            assertEquals("/classpath-1.jar", jae.getLastHDFSClasspathURI(conf));
+        } catch (final ActionExecutorException ignored) {
+        }
     }
 }
