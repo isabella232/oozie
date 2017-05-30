@@ -2991,4 +2991,9 @@ public class TestJavaActionExecutor extends ActionExecutorTestCase {
             fail("Should *not* throw an ActionExecutorException");
         }
     }
+
+    public void testFileWithSpaces() throws Exception {
+        String actPath = JavaActionExecutor.getTrimmedEncodedPath("/user/map dev/test-case/shell/script/shell 1.sh");
+        assertEquals("/user/map%20dev/test-case/shell/script/shell%201.sh", actPath);
+    }
 }
