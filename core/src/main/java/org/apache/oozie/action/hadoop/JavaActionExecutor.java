@@ -573,7 +573,7 @@ public class JavaActionExecutor extends ActionExecutor {
 
         URI uri = null;
         try {
-            uri = new URI(filePath);
+            uri = new URI(getTrimmedEncodedPath(filePath));
             URI baseUri = appPath.toUri();
             if (uri.getScheme() == null) {
                 String resolvedPath = uri.getPath();
@@ -815,7 +815,7 @@ public class JavaActionExecutor extends ActionExecutor {
             if (eProp.getName().equals("file")) {
                 String[] filePaths = eProp.getTextTrim().split(",");
                 for (String path : filePaths) {
-                    addToCache(conf, appPath, path.trim(), false);
+                    addToCache(conf, appPath, path, false);
                 }
             }
             else if (eProp.getName().equals("archive")) {
@@ -827,6 +827,11 @@ public class JavaActionExecutor extends ActionExecutor {
         }
 
         addAllShareLibs(appPath, conf, context, actionXml);
+    }
+
+    @VisibleForTesting
+    protected static String getTrimmedEncodedPath(String path) {
+        return path.trim().replace(" ", "%20");
     }
 
     // Adds action specific share libs and common share libs
