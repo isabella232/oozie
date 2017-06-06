@@ -2987,7 +2987,8 @@ public class TestJavaActionExecutor extends ActionExecutorTestCase {
 
             conf.set("mapreduce.job.classpath.files", "hdfs://localhost:8020/classpath-1.jar,classpath-2.jar");
             assertEquals("/classpath-1.jar", jae.getLastHDFSClasspathURI(conf));
-        } catch (final ActionExecutorException ignored) {
+        } catch (final ActionExecutorException e) {
+            fail("Should *not* throw an ActionExecutorException");
         }
     }
 }
