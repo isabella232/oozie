@@ -25,7 +25,6 @@ import org.junit.Test;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class TestLauncherMain {
@@ -46,8 +45,8 @@ public class TestLauncherMain {
         final LauncherMain noop = new NoopLauncherMain();
         noop.setupLog4jProperties();
 
-        assertTrue(outContent.toString().contains("INFO: log4j config file log4j.properties loaded successfully."));
-        assertEquals(noop.log4jProperties.size(), 5);
+        assertTrue("log4j.properties not loaded", outContent.toString().contains("INFO: log4j config file log4j.properties loaded successfully."));
+        assertTrue("log4j.properties empty", noop.log4jProperties.size() > 0);
     }
 
     private static class NoopLauncherMain extends LauncherMain {
