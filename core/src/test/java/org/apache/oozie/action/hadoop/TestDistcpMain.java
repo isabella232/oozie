@@ -55,7 +55,13 @@ public class TestDistcpMain extends MainTestCase {
         jobConf.writeXml(os);
         os.close();
 
-        System.setProperty("oozie.action.conf.xml", actionXml.getAbsolutePath());
+        File statsDataFile = new File(getTestCaseDir(), "statsdata.properties");
+        File hadoopIdsFile = new File(getTestCaseDir(), "hadoopIds");
+
+        setSystemProperty("oozie.launcher.job.id", "" + System.currentTimeMillis());
+        setSystemProperty("oozie.action.conf.xml", actionXml.getAbsolutePath());
+        setSystemProperty("oozie.action.stats.properties", statsDataFile.getAbsolutePath());
+        setSystemProperty("oozie.action.externalChildIDs", hadoopIdsFile.getAbsolutePath());
 
         // Check normal execution
         DistcpMain.main(new String[]{inputDir.toString(), outputDir.toString()});

@@ -347,6 +347,13 @@
             <artifactId>oozie-examples</artifactId>
             <scope>test</scope>
         </dependency>
+
+        <dependency>
+            <artifactId>snappy-java</artifactId>
+            <groupId>org.xerial.snappy</groupId>
+            <version>1.0.5</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
