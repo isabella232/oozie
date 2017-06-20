@@ -292,6 +292,7 @@ public class WorkflowJobQueryExecutor extends QueryExecutor<WorkflowJobBean, Wor
                 bean.setLogToken((String) arr[9]);
                 bean.setWfInstanceBlob((BinaryBlob) (arr[10]));
                 bean.setSlaXmlBlob((StringBlob) arr[11]);
+                bean.setProtoActionConfBlob((StringBlob) arr[12]);
                 break;
             case GET_WORKFLOW_RESUME:
                 bean = new WorkflowJobBean();
