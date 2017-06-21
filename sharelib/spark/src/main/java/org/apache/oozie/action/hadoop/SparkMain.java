@@ -45,10 +45,10 @@ public class SparkMain extends LauncherMain {
             Pattern.compile("Submitted application (application[0-9_]*)") };
     @VisibleForTesting
     static final Pattern SPARK_ASSEMBLY_JAR_PATTERN = Pattern
-            .compile("^spark-assembly((?:(-|_|(\\d+\\.))\\d+(?:\\.\\d+)*))*\\.jar$");
+            .compile("^spark-assembly.*\\.jar$");
     @VisibleForTesting
     static final Pattern SPARK_YARN_JAR_PATTERN = Pattern
-            .compile("^spark-yarn((?:(-|_|(\\d+\\.))\\d+(?:\\.\\d+)*))*\\.jar$");
+            .compile("^spark-yarn.*\\.jar$");
     static final String HIVE_SITE_CONF = "hive-site.xml";
     static final String SPARK_LOG4J_PROPS = "spark-log4j.properties";
 
