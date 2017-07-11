@@ -44,6 +44,14 @@
                     <name>mapred.job.queue.name</name>
                     <value>${queueName}</value>
                 </property>
+                <property>
+                    <name>hive.metastore.schema.verification</name>
+                    <value>false</value>
+                </property>
+                <property>
+                    <name>datanucleus.schema.autoCreateTables</name>
+                    <value>true</value>
+                </property>
             </configuration>
             <script>script.q</script>
             <param>INPUT=/user/${wf:user()}/${examplesRoot}/input-data/table</param>
