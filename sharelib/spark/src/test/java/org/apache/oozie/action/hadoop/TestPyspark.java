@@ -34,7 +34,7 @@ import org.apache.oozie.util.XConfiguration;
 public class TestPyspark extends ActionExecutorTestCase {
 
 
-    public static String PY4J_ZIP = "py4j-0.9-src.zip";
+    public static String PY4J_ZIP = "py4j-0.10.4-src.zip";
     public static String PYSPARK_ZIP = "pyspark.zip";
     public static String PI_EXAMPLE = "pi.py";
 
