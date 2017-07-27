@@ -271,6 +271,12 @@
             </exclusions>
         </dependency>
         <dependency>
+            <groupId>org.apache.hive</groupId>
+            <artifactId>hive-exec</artifactId>
+            <classifier>core</classifier>
+            <version>${cdh.hive.version}</version>
+        </dependency>
+        <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
             <scope>compile</scope>
