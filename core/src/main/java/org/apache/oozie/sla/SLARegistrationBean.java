@@ -51,7 +51,10 @@ import org.json.simple.JSONObject;
 
  @NamedQuery(name = "GET_SLA_REG_ON_RESTART", query = "select w.notificationMsg, w.upstreamApps, w.slaConfig, w.jobData from SLARegistrationBean w where w.jobId = :id"),
 
- @NamedQuery(name = "GET_SLA_REG_ALL", query = "select OBJECT(w) from SLARegistrationBean w where w.jobId = :id") })
+ @NamedQuery(name = "GET_SLA_REG_ALL", query = "select OBJECT(w) from SLARegistrationBean w where w.jobId = :id"),
+
+ @NamedQuery(name = "GET_SLA_REGISTRATIONS", query = "select OBJECT(w) from SLARegistrationBean w")
+})
 public class SLARegistrationBean implements JsonBean {
 
     @Id
@@ -297,7 +300,7 @@ public class SLARegistrationBean implements JsonBean {
             }
         }
     }
-    
+
     public String slaConfigMapToString() {
         StringBuilder sb = new StringBuilder();
         for (Entry<String, String> e : slaConfigMap.entrySet()) {
