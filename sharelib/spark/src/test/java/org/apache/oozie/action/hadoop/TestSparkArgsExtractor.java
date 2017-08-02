@@ -223,7 +223,7 @@ public class TestSparkArgsExtractor {
                         "--conf", "spark.driver.extraClassPath=$PWD/*",
                         "--conf", "spark.yarn.security.tokens.hive.enabled=false",
                         "--conf", "spark.yarn.security.tokens.hbase.enabled=false",
-                        "--files", "spark-log4j.properties,hive-site.xml",
+                        "--files", "spark-log4j.properties",
                         "--conf", "spark.yarn.jar=null",
                         "--verbose",
                         "/lib/test.jar",
