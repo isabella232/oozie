@@ -37,6 +37,36 @@ public class TestCallbackServlet extends DagServletTestCase {
     }
 
     @SuppressWarnings("unchecked")
+    public void testCallbackVerify() throws Exception {
+        runTest("/callback", CallbackServlet.class, true, new Callable<Void>() {
+            public Void call() throws Exception {
+                URL url = createURL("", Collections.EMPTY_MAP);
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                assertEquals(HttpServletResponse.SC_BAD_REQUEST, conn.getResponseCode());
+
+                Map<String, String> params = new HashMap<String, String>();
+                params.put("verify", "true");
+                url = createURL("", params);
+                conn = (HttpURLConnection) url.openConnection();
+                assertEquals(HttpServletResponse.SC_OK, conn.getResponseCode());
+
+                params = new HashMap<String, String>();
+                params.put("verify", "foo");
+                url = createURL("", params);
+                conn = (HttpURLConnection) url.openConnection();
+                assertEquals(HttpServletResponse.SC_OK, conn.getResponseCode());
+
+                params = new HashMap<String, String>();
+                params.put("verifyx", "foo");
+                url = createURL("", params);
+                conn = (HttpURLConnection) url.openConnection();
+                assertEquals(HttpServletResponse.SC_BAD_REQUEST, conn.getResponseCode());
+                return null;
+            }
+        });
+    }
+
+    @SuppressWarnings("unchecked")
     public void testCallbackGet() throws Exception {
         runTest("/callback", CallbackServlet.class, true, new Callable<Void>() {
             public Void call() throws Exception {

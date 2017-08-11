@@ -41,6 +41,7 @@ import org.apache.oozie.util.XLog;
 
 public class CallbackServlet extends JsonRestServlet {
     private static final String INSTRUMENTATION_NAME = "callback";
+    private static final String VERIFY_PARAM = "verify=";
 
     private static final ResourceInfo RESOURCE_INFO =
             new ResourceInfo("", Arrays.asList("POST", "GET"), Collections.EMPTY_LIST);
@@ -68,6 +69,9 @@ public class CallbackServlet extends JsonRestServlet {
         String queryString = request.getQueryString();
         CallbackService callbackService = Services.get().get(CallbackService.class);
 
+        if (queryString != null && queryString.startsWith(VERIFY_PARAM)) {
+            return;
+        }
         if (!callbackService.isValid(queryString)) {
             throw new XServletException(HttpServletResponse.SC_BAD_REQUEST, ErrorCode.E0402, queryString);
         }
