@@ -155,7 +155,7 @@ public class TestWorkflow extends MiniOozieTestCase {
 
         oozieClient.start(jobId);
 
-        waitFor(15 * 1000, new Predicate() {
+        waitFor(100 * 1000, new Predicate() {
             public boolean evaluate() throws Exception {
                 final WorkflowJob wf = oozieClient.getJobInfo(jobId);
                 return wf.getStatus() == WorkflowJob.Status.SUCCEEDED;
