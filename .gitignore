@@ -29,3 +29,8 @@ distro/downloads
 SecurityAuth.audit
 build
 webapp/overlays
+
+# dist_test
+.grind_project.cfg
+grind-test-results/
+test_results.xml
