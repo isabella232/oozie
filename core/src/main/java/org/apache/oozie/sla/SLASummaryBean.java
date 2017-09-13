@@ -20,7 +20,9 @@ package org.apache.oozie.sla;
 
 import java.sql.Timestamp;
 import java.util.Date;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.persistence.Basic;
 import javax.persistence.Column;
@@ -30,12 +32,15 @@ import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 
+import com.google.common.annotations.VisibleForTesting;
 import org.apache.oozie.AppType;
 import org.apache.oozie.client.event.SLAEvent;
+import org.apache.oozie.client.event.SLAEvent.EventStatus;
 import org.apache.oozie.client.rest.JsonBean;
 import org.apache.oozie.client.rest.JsonTags;
 import org.apache.oozie.client.rest.JsonUtils;
 import org.apache.oozie.util.DateUtils;
+import org.apache.oozie.util.XLog;
 import org.apache.openjpa.persistence.jdbc.Index;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -67,6 +72,10 @@ import org.json.simple.JSONObject;
  * Class to store all the SLA related details (summary) per job
  */
 public class SLASummaryBean implements JsonBean {
+    private static final XLog LOG = XLog.getLog(SLASummaryBean.class);
+
+    public static final String EVENT_STATUS_SEPARATOR = ",";
+    public static final String EVENT_STATUS_ALL = "ALL";
 
     @Id
     @Basic
@@ -357,7 +366,8 @@ public class SLASummaryBean implements JsonBean {
     @SuppressWarnings("unchecked")
     @Override
     public JSONObject toJSONObject() {
-        JSONObject json = new JSONObject();
+        final JSONObject json = new JSONObject();
+
         json.put(JsonTags.SLA_SUMMARY_ID, jobId);
         if (parentId != null) {
             json.put(JsonTags.SLA_SUMMARY_PARENT_ID, parentId);
@@ -389,7 +399,9 @@ public class SLASummaryBean implements JsonBean {
         json.put(JsonTags.SLA_SUMMARY_ACTUAL_DURATION, actualDuration);
         json.put(JsonTags.SLA_SUMMARY_JOB_STATUS, jobStatus);
         json.put(JsonTags.SLA_SUMMARY_SLA_STATUS, slaStatus);
+        json.put(JsonTags.SLA_SUMMARY_EVENT_STATUS, new SLAEventStatusCalculator(this).calculate().toString());
         json.put(JsonTags.SLA_SUMMARY_LAST_MODIFIED, lastModifiedTS.getTime());
+
         return json;
     }
 
@@ -432,8 +444,115 @@ public class SLASummaryBean implements JsonBean {
             json.put(JsonTags.SLA_SUMMARY_ACTUAL_DURATION, actualDuration);
             json.put(JsonTags.SLA_SUMMARY_JOB_STATUS, jobStatus);
             json.put(JsonTags.SLA_SUMMARY_SLA_STATUS, slaStatus);
+            json.put(JsonTags.SLA_SUMMARY_EVENT_STATUS, new SLAEventStatusCalculator(this).calculate().toString());
             json.put(JsonTags.SLA_SUMMARY_LAST_MODIFIED, JsonUtils.formatDateRfc822(lastModifiedTS, timeZoneId));
+
             return json;
+        }
+    }
+
+    @VisibleForTesting
+    static class SLAEventStatusCalculator {
+        private final Set<EventStatus> events = new LinkedHashSet<>();
+        private final SLASummaryBean slaSummaryBean;
+
+        SLAEventStatusCalculator(final SLASummaryBean slaSummaryBean) {
+            this.slaSummaryBean = slaSummaryBean;
+        }
+
+        SLAEventStatusCalculator calculate() {
+            events.clear();
+
+            addStartEvents();
+
+            addDurationEvents();
+
+            addEndEvents();
+
+            return this;
+        }
+
+        private void addStartEvents() {
+            if (slaSummaryBean.expectedStartTS != null) {
+                if (slaSummaryBean.actualStartTS != null) {
+                    final long diff = (slaSummaryBean.actualStartTS.getTime() - slaSummaryBean.expectedStartTS.getTime()) / 60_000;
+                    if (diff > 0) {
+                        events.add(EventStatus.START_MISS);
+                    }
+                    else {
+                        events.add(EventStatus.START_MET);
+                    }
+                }
+                else {
+                    final long diff = (nowMs() - slaSummaryBean.expectedStartTS.getTime()) / 60_000;
+                    if (diff > 0) {
+                        events.add(EventStatus.START_MISS);
+                    }
+                }
+            }
+        }
+
+        private long nowMs() {
+            return new Date().getTime();
+        }
+
+        private void addDurationEvents() {
+            if (slaSummaryBean.expectedDuration != -1) {
+                if (slaSummaryBean.actualDuration != -1) {
+                    final long diff = slaSummaryBean.actualDuration - slaSummaryBean.expectedDuration;
+                    if (diff > 0) {
+                        events.add(EventStatus.DURATION_MISS);
+                    }
+                    else {
+                        events.add(EventStatus.DURATION_MET);
+                    }
+                }
+                else {
+                    if (slaSummaryBean.actualStartTS != null) {
+                        final long currentDur = nowMs() - slaSummaryBean.actualStartTS.getTime();
+                        if (slaSummaryBean.expectedDuration < currentDur) {
+                            events.add(EventStatus.DURATION_MISS);
+                        }
+                    }
+                }
+            }
+        }
+
+        public void addEndEvents() {
+            if (slaSummaryBean.expectedEndTS != null) {
+                if (slaSummaryBean.actualEndTS != null) {
+                    final long diff = (slaSummaryBean.actualEndTS.getTime() - slaSummaryBean.expectedEndTS.getTime()) / 60_000;
+                    if (diff > 0) {
+                        events.add(EventStatus.END_MISS);
+                    }
+                    else {
+                        events.add(EventStatus.END_MET);
+                    }
+                }
+                else {
+                    final long diff = (nowMs() - slaSummaryBean.expectedEndTS.getTime()) / 60_000;
+                    if (diff > 0) {
+                        events.add(EventStatus.END_MISS);
+                    }
+                }
+            }
+        }
+
+        @Override
+        public String toString() {
+            final StringBuilder eventStatusBuilder = new StringBuilder();
+
+            boolean first = true;
+            for (final EventStatus e: events) {
+                if (!first) {
+                    eventStatusBuilder.append(EVENT_STATUS_SEPARATOR);
+                }
+
+                eventStatusBuilder.append(e.toString());
+                first = false;
+            }
+
+            return eventStatusBuilder.toString();
         }
     }
 
@@ -442,19 +561,42 @@ public class SLASummaryBean implements JsonBean {
      *
      * @param slaSummaryList sla summary list.
      * @param timeZoneId time zone to use for dates in the JSON array.
-     * @return the corresponding JSON object.
+     * @param includeEventStatus whether to include {@link SLASummaryBean#eventStatus} in the JSON object
+     * @return the corresponding JSON object
      */
     @SuppressWarnings("unchecked")
-    public static JSONObject toJSONObject(List<? extends SLASummaryBean> slaSummaryList, String timeZoneId) {
-        JSONObject json = new JSONObject();
-        JSONArray array = new JSONArray();
-        if (slaSummaryList != null) {
-            for (SLASummaryBean summary : slaSummaryList) {
-                array.add(summary.toJSONObject(timeZoneId));
+    public static JSONObject toJSONObject(final List<? extends SLASummaryBean> slaSummaryList,
+                                          final String timeZoneId,
+                                          final boolean includeEventStatus) {
+
+        LOG.debug("Transforming to JSON object. [slaSummaryList.size={0};timeZoneId={1};includeEventStatus={2}]",
+                slaSummaryList.size(),
+                timeZoneId,
+                includeEventStatus);
+
+        final JSONObject jsonObject = new JSONObject();
+        final JSONArray jsonArray = new JSONArray();
+
+        for (final SLASummaryBean summary : slaSummaryList) {
+            final JSONObject summaryJson = summary.toJSONObject(timeZoneId);
+
+            final boolean removeEventStatus = !includeEventStatus && summaryJson.containsKey(JsonTags.SLA_SUMMARY_EVENT_STATUS);
+            if (removeEventStatus) {
+                LOG.trace("Removing event status. [{0}={1}]",
+                        JsonTags.SLA_SUMMARY_ID,
+                        summaryJson.get(JsonTags.SLA_SUMMARY_ID));
+
+                summaryJson.remove(JsonTags.SLA_SUMMARY_EVENT_STATUS);
             }
+
+            jsonArray.add(summaryJson);
         }
-        json.put(JsonTags.SLA_SUMMARY_LIST, array);
-        return json;
+
+        jsonObject.put(JsonTags.SLA_SUMMARY_LIST, jsonArray);
+
+        LOG.debug("Returning JSON object. [jsonArray.size={0}]", jsonArray.size());
+
+        return jsonObject;
     }
 
 }

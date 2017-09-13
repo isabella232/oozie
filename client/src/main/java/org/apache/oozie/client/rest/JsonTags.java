@@ -176,6 +176,7 @@ public interface JsonTags {
     public static final String SLA_SUMMARY_ACTUAL_DURATION = "actualDuration";
     public static final String SLA_SUMMARY_JOB_STATUS = "jobStatus";
     public static final String SLA_SUMMARY_SLA_STATUS = "slaStatus";
+    public static final String SLA_SUMMARY_EVENT_STATUS = "eventStatus";
     public static final String SLA_SUMMARY_LAST_MODIFIED = "lastModified";
 
     public static final String TO_STRING = "toString";

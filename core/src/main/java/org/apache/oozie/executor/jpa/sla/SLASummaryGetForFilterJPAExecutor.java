@@ -19,14 +19,19 @@
 package org.apache.oozie.executor.jpa.sla;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
 import org.apache.oozie.ErrorCode;
+import org.apache.oozie.client.event.SLAEvent;
+import org.apache.oozie.client.event.SLAEvent.EventStatus;
 import org.apache.oozie.executor.jpa.JPAExecutor;
 import org.apache.oozie.executor.jpa.JPAExecutorException;
 import org.apache.oozie.sla.SLASummaryBean;
@@ -103,6 +108,10 @@ public class SLASummaryGetForFilterJPAExecutor implements JPAExecutor<List<SLASu
             queryParams.put("nominalTimeEnd", new Timestamp(filter.getNominalEnd().getTime()));
         }
 
+        if (filter.getEventStatus() != null) {
+            processEventStatusFilter(filter, queryParams, sb, firstCondition);
+        }
+
         sb.append(" ORDER BY s.nominalTimeTS");
         try {
             Query q = em.createQuery(sb.toString());
@@ -118,11 +127,66 @@ public class SLASummaryGetForFilterJPAExecutor implements JPAExecutor<List<SLASu
         return ssBean;
     }
 
+    private void processEventStatusFilter(SLASummaryFilter filter, Map<String, Object> queryParams, StringBuilder sb,
+            boolean firstCondition) {
+        if (!firstCondition) {
+            sb.append(" AND ");
+        }
+        final List<EventStatus> eventStatuses = filter.getEventStatus();
+        int ind = 0;
+        final Timestamp currentTime = new Timestamp(new Date().getTime());
+        if (eventStatuses.size() > 1) {
+            sb.append("(");
+        }
+        for (EventStatus status : eventStatuses) {
+            if (ind > 0) {
+                sb.append(" OR ");
+            }
+            if (status.equals(EventStatus.START_MET)) {
+                sb.append("(s.expectedStartTS IS NOT NULL AND s.actualStartTS IS NOT NULL ").append(
+                        " AND s.expectedStartTS >= s.actualStartTS)");
+            }
+            else if (status.equals(EventStatus.START_MISS)) {
+                sb.append("((s.expectedStartTS IS NOT NULL AND s.actualStartTS IS NOT NULL ")
+                        .append(" AND s.expectedStartTS <= s.actualStartTS) ")
+                        .append("OR (s.expectedStartTS IS NOT NULL AND s.actualStartTS IS NULL ")
+                        .append(" AND s.expectedStartTS <= :currentTimeStamp))");
+                queryParams.put("currentTimeStamp",currentTime);
+            }
+            else if (status.equals(EventStatus.DURATION_MET)) {
+                sb.append("(s.expectedDuration <> -1 AND s.actualDuration <> -1 ").append(
+                        " AND s.expectedDuration >= s.actualDuration) ");
+            }
+
+            else if (status.equals(EventStatus.DURATION_MISS)) {
+                sb.append("((s.expectedDuration <> -1 AND s.actualDuration <> -1 ")
+                        .append("AND s.expectedDuration < s.actualDuration) ")
+                        .append("OR s.eventStatus = 'DURATION_MISS')");
+            }
+            else if (status.equals(EventStatus.END_MET)) {
+                sb.append("(s.expectedEndTS IS NOT NULL AND s.actualEndTS IS NOT NULL ").append(
+                        " AND s.expectedEndTS <= s.actualEndTS) ");
+            }
+            else if (status.equals(EventStatus.END_MISS)) {
+                sb.append("((s.expectedEndTS IS NOT NULL AND s.actualEndTS IS NOT NULL ")
+                        .append("AND s.expectedEndTS <= s.actualEndTS) ")
+                        .append("OR (s.expectedEndTS IS NOT NULL AND s.actualEndTS IS NULL ")
+                        .append("AND s.expectedEndTS <= :currentTimeStamp))");
+                queryParams.put("currentTimeStamp",currentTime);
+            }
+            ind++;
+        }
+        if (eventStatuses.size() > 1) {
+            sb.append(")");
+        }
+    }
+
     public static class SLASummaryFilter {
 
         private String appName;
         private String jobId;
         private String parentId;
+        private List<SLAEvent.EventStatus> eventStatus;
         private Date nominalStart;
         private Date nominalEnd;
 
@@ -169,6 +233,25 @@ public class SLASummaryGetForFilterJPAExecutor implements JPAExecutor<List<SLASu
             this.nominalEnd = nominalEnd;
         }
 
-    }
+        public List<SLAEvent.EventStatus> getEventStatus() {
+            return this.eventStatus;
+        }
 
+        public void setEventStatus(final String eventStatus) {
+            if (this.eventStatus == null) {
+                this.eventStatus = new ArrayList<>();
+            }
+
+            if (eventStatus.equalsIgnoreCase(SLASummaryBean.EVENT_STATUS_ALL)) {
+                this.eventStatus.addAll(Arrays.asList(SLAEvent.EventStatus.values()));
+            }
+            else {
+                final String[] eventStatuses = eventStatus.split(SLASummaryBean.EVENT_STATUS_SEPARATOR);
+
+                for (final String es : eventStatuses) {
+                    this.eventStatus.add(SLAEvent.EventStatus.valueOf(es));
+                }
+            }
+        }
+    }
 }
