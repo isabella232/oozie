@@ -34,6 +34,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.oozie.ErrorCode;
 import org.apache.oozie.XException;
 import org.apache.oozie.client.OozieClient;
+import org.apache.oozie.client.event.SLAEvent;
 import org.apache.oozie.client.rest.RestConstants;
 import org.apache.oozie.command.CommandException;
 import org.apache.oozie.executor.jpa.sla.SLASummaryGetForFilterJPAExecutor;
@@ -47,6 +48,7 @@ import org.json.simple.JSONObject;
 
 @SuppressWarnings("serial")
 public class V2SLAServlet extends SLAServlet {
+    private static final XLog LOG = XLog.getLog(V2SLAServlet.class);
 
     private static final String INSTRUMENTATION_NAME = "v2sla";
     private static final JsonRestServlet.ResourceInfo RESOURCES_INFO[] = new JsonRestServlet.ResourceInfo[1];
@@ -58,6 +60,7 @@ public class V2SLAServlet extends SLAServlet {
         SLA_FILTER_NAMES.add(OozieClient.FILTER_SLA_APPNAME);
         SLA_FILTER_NAMES.add(OozieClient.FILTER_SLA_NOMINAL_START);
         SLA_FILTER_NAMES.add(OozieClient.FILTER_SLA_NOMINAL_END);
+        SLA_FILTER_NAMES.add(OozieClient.FILTER_SLA_EVENT_STATUS);
     }
 
     static {
@@ -73,7 +76,7 @@ public class V2SLAServlet extends SLAServlet {
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
-        XLog.getLog(getClass()).debug("Got SLA GET request:" + request.getQueryString());
+        LOG.debug("Got SLA GET request:" + request.getQueryString());
         try {
             stopCron();
             JSONObject json = getSLASummaryList(request, response);
@@ -121,6 +124,17 @@ public class V2SLAServlet extends SLAServlet {
             if (filterList.containsKey(OozieClient.FILTER_SLA_PARENT_ID)) {
                 filter.setParentId(filterList.get(OozieClient.FILTER_SLA_PARENT_ID).get(0));
             }
+            if (filterList.containsKey(OozieClient.FILTER_SLA_EVENT_STATUS)) {
+                final String eventStatusFilter = filterList.get(OozieClient.FILTER_SLA_EVENT_STATUS).get(0);
+
+                LOG.debug("Checking event status filter. [eventStatusFilter={0}]", eventStatusFilter);
+
+                checkEventStatusFilter(eventStatusFilter);
+
+                LOG.debug("Applying event status filter. [eventStatusFilter={0}]", eventStatusFilter);
+
+                filter.setEventStatus(eventStatusFilter);
+            }
             if (filterList.containsKey(OozieClient.FILTER_SLA_APPNAME)) {
                 filter.setAppName(filterList.get(OozieClient.FILTER_SLA_APPNAME).get(0));
             }
@@ -146,7 +160,9 @@ public class V2SLAServlet extends SLAServlet {
             else {
                 XLog.getLog(getClass()).error(ErrorCode.E0610);
             }
-            return SLASummaryBean.toJSONObject(slaSummaryList, timeZoneId);
+
+            final boolean includeEventStatus = filterList.containsKey(OozieClient.FILTER_SLA_EVENT_STATUS);
+            return SLASummaryBean.toJSONObject(slaSummaryList, timeZoneId, includeEventStatus);
         }
         catch (XException ex) {
             throw new CommandException(ex);
@@ -162,4 +178,16 @@ public class V2SLAServlet extends SLAServlet {
 
     }
 
+    private void checkEventStatusFilter(final String eventStatusFilter) throws XServletException {
+        if (eventStatusFilter.toUpperCase().contains(SLASummaryBean.EVENT_STATUS_ALL)) {
+            for (final SLAEvent.EventStatus eventStatus : SLAEvent.EventStatus.values()) {
+                if (eventStatusFilter.contains(eventStatus.name())) {
+                    throw new XServletException(HttpServletResponse.SC_BAD_REQUEST,
+                            ErrorCode.E0303,
+                            String.format("%s.%s", RestConstants.JOBS_FILTER_PARAM, OozieClient.FILTER_SLA_EVENT_STATUS),
+                            eventStatusFilter);
+                }
+            }
+        }
+    }
 }

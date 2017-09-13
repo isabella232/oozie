@@ -152,6 +152,8 @@ public class OozieClient {
 
     public static final String FILTER_SLA_PARENT_ID = "parent_id";
 
+    public static final String FILTER_SLA_EVENT_STATUS = "event_status";
+
     public static final String FILTER_SLA_NOMINAL_START = "nominal_start";
 
     public static final String FILTER_SLA_NOMINAL_END = "nominal_end";
