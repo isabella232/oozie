@@ -47,7 +47,11 @@ EOF
 # Invoke grind to run tests
 grind -c ${DIR}/$SCRIPTS/env/grind.cfg config
 grind -c ${DIR}/$SCRIPTS/env/grind.cfg pconfig
-grind -c ${DIR}/$SCRIPTS/env/grind.cfg test --artifacts -r 3
+grind -c ${DIR}/$SCRIPTS/env/grind.cfg test --artifacts -r 3 \
+    -e TestHAPartitionDependencyManagerService \
+    -e TestCredentials \
+    -e TestSLAEventStatusCalculator \
+    -e TestStatusTransitService
 
 # Cleanup the grind folder
 if [[ -d "$DIR/$SCRIPTS" ]]; then
