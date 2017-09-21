@@ -208,7 +208,7 @@ function setupJava() {
 
   case ${_JAVA_VERSION} in
     1.7)
-      MAVEN_OPTS="-Xmx1g -Xms128m -XX:MaxPermSize=256m"
+      MAVEN_OPTS="-Xmx2g -Xms512m -XX:MaxPermSize=384m"
       JAVA_OPTS="-Xmx4g -Xms1g -XX:MaxPermSize=256m"
       if [[ -z $JAVA7_HOME ]]; then
         echo JAVA7_HOME is not set
@@ -219,7 +219,7 @@ function setupJava() {
       ;;
 
     1.8)
-      MAVEN_OPTS="-Xmx1g -Xms128m"
+      MAVEN_OPTS="-Xmx2g -Xms512m"
       JAVA_OPTS="-Xmx4g -Xms1g"
       if [[ -z $JAVA8_HOME ]]; then
         echo JAVA8_HOME is not set
@@ -244,6 +244,16 @@ function setupJava() {
   echo
   echo ---- Java version -----
   java -version
+  echo -----------------------
+
+  echo
+  echo ----- MAVEN_OPTS ------
+  echo "${MAVEN_OPTS}"
+  echo -----------------------
+
+  echo
+  echo ----- JAVA_OPTS ------
+  echo "${JAVA_OPTS}"
   echo -----------------------
 }
 
@@ -301,9 +311,9 @@ function setupToolChain() {
 
     # append MAVEN to PATH
     PATH=${PATH}:${MAVEN3_HOME}/bin
-
-    setupJava ${_JAVA_VERSION}
   fi
+
+  setupJava ${_JAVA_VERSION}
 
   ensureCommand "javac" "Unable to execute javac (make sure that JAVA_HOME/PATH points to a JDK)"
   ensureCommand "mvn" "Unable to execute mvn"
