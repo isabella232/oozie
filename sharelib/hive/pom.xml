@@ -49,6 +49,10 @@
             <scope>compile</scope>
             <exclusions>
                 <exclusion>
+                    <groupId>com.google.guava</groupId>
+                    <artifactId>guava</artifactId>
+                </exclusion>
+                <exclusion>
                     <groupId>org.apache.hadoop</groupId>
                     <artifactId>hadoop-core</artifactId>
                 </exclusion>
@@ -193,6 +197,10 @@
             <scope>compile</scope>
             <exclusions>
                 <exclusion>
+                    <groupId>com.google.guava</groupId>
+                    <artifactId>guava</artifactId>
+                </exclusion>
+                <exclusion>
                     <groupId>org.apache.hadoop</groupId>
                     <artifactId>hadoop-core</artifactId>
                 </exclusion>
@@ -211,6 +219,10 @@
                 <exclusion>
                     <groupId>commons-codec</groupId>
                     <artifactId>commons-codec</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.calcite.avatica</groupId>
+                    <artifactId>avatica-core</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
