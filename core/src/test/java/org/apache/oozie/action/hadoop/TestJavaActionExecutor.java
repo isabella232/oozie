@@ -2860,6 +2860,10 @@ public class TestJavaActionExecutor extends ActionExecutorTestCase {
         Context context = createContext(xmlStr, getTestGroup());
         Configuration conf = new Configuration(true);
         conf.set("mapred.job.tracker", getJobTrackerUri());
+        if (conf.get("mapreduce.map.maxattempts") == null) {
+            //The property's name is different in MR1.
+            conf.set("mapreduce.map.maxattempts", "4");
+        }
         assertEquals("MapReduce's default value changed", "4", conf.get("mapreduce.map.maxattempts"));
         ae.setupActionConf(conf, context, actionXml, new Path(context.getWorkflow().getAppPath()));
         assertEquals("failed to inject property >action.foo<","AA", conf.get("action.foo"));
