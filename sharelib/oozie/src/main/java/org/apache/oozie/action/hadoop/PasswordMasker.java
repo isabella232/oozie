@@ -25,8 +25,6 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 /**
  * A generic password masker that masks {@code Map<String, String>} values given that its keys are considered password keys.
  * <p/>
@@ -82,16 +80,48 @@ public class PasswordMasker {
         return Maps.transformEntries(unmasked, new Maps.EntryTransformer<String, String, String>() {
             @Override
             public String transformEntry(@Nonnull String key, @Nonnull String value) {
-                checkNotNull(key, "key has to be set");
-                checkNotNull(value, "value has to be set");
-
-                if (isPasswordKey(key)) {
-                    return PASSWORD_MASK;
-                }
-
-                return maskPasswordsIfNecessary(value);
+                return mask(key, value);
             }
         });
+    }
+
+   /**
+     * Returns a the value of the entry masked if its considered as a password
+     * There are two cases when passwords are masked:
+     * 1. The key contains the string "pass". In this case, the entire value is considered a password and replaced completely with
+     * a masking string.
+     * 2. The value matches a regular expression. Strings like "HADOOP_CREDSTORE_PASSWORD=pwd123" or
+     * "-Djavax.net.ssl.trustStorePassword=password" are considered password definition strings and the text after the equal sign
+     * is replaced with a masking string.
+     *
+     * @param unmasked key-value entry
+     * @return The value of the entry changed based on the replace algorithm described above
+     */
+    public String mask(Map.Entry<String, String> unmasked) {
+        return mask(unmasked.getKey(), unmasked.getValue());
+    }
+
+    /**
+     * Returns a the value of the entry masked if its considered as a password
+     * There are two cases when passwords are masked:
+     * 1. The key contains the string "pass". In this case, the entire value is considered a password and replaced completely with
+     * a masking string.
+     * 2. The value matches a regular expression. Strings like "HADOOP_CREDSTORE_PASSWORD=pwd123" or
+     * "-Djavax.net.ssl.trustStorePassword=password" are considered password definition strings and the text after the equal sign
+     * is replaced with a masking string.
+     * @param key key of entry
+     * @param value value of entry
+     * @return The value of the entry changed based on the replace algorithm described above
+     */
+    private String mask(String key, String value) {
+        if (key == null || value == null || value.isEmpty()) {
+            return value;
+        }
+
+        if (isPasswordKey(key)) {
+            return PASSWORD_MASK;
+        }
+        return maskPasswordsIfNecessary(value);
     }
 
     /**
@@ -116,6 +146,9 @@ public class PasswordMasker {
     }
 
     private boolean containsPasswordFragment(String maybePasswordFragments) {
+        if (maybePasswordFragments == null || maybePasswordFragments.length() == 0) {
+            return false;
+        }
         return PASSWORD_CONTAINING_PATTERN
                 .matcher(maybePasswordFragments)
                 .matches();
