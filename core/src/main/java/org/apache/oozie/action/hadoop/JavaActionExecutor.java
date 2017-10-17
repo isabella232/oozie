@@ -71,8 +71,7 @@ import org.apache.hadoop.yarn.api.records.ApplicationSubmissionContext;
 import org.apache.hadoop.yarn.api.records.ContainerLaunchContext;
 import org.apache.hadoop.yarn.api.records.FinalApplicationStatus;
 import org.apache.hadoop.yarn.api.records.LocalResource;
-import org.apache.hadoop.yarn.api.records.Priority;
-import org.apache.hadoop.yarn.api.records.Resource;
+import org.apache.hadoop.yarn.api.records.ResourceRequest;
 import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 import org.apache.hadoop.yarn.client.api.YarnClient;
 import org.apache.hadoop.yarn.client.api.YarnClientApplication;
@@ -115,7 +114,6 @@ import java.util.Set;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
-
 
 public class JavaActionExecutor extends ActionExecutor {
     public static final String RUNNING = "RUNNING";
@@ -1097,8 +1095,8 @@ public class JavaActionExecutor extends ActionExecutor {
 
         ApplicationSubmissionContext appContext = Records.newRecord(ApplicationSubmissionContext.class);
 
-        setResources(launcherJobConf, appContext);
-        setPriority(launcherJobConf, appContext);
+        int priority = getPriority(launcherJobConf);
+        setResources(launcherJobConf, appContext, priority);
         setQueue(launcherJobConf, appContext);
 
         appContext.setApplicationId(appId);
@@ -1287,7 +1285,7 @@ public class JavaActionExecutor extends ActionExecutor {
         appContext.setQueue(launcherQueueName);
     }
 
-    private void setPriority(Configuration launcherJobConf, ApplicationSubmissionContext appContext) {
+    private int getPriority(Configuration launcherJobConf) {
         int priority;
         if (launcherJobConf.get(LauncherAM.OOZIE_LAUNCHER_PRIORITY_PROPERTY) != null) {
             priority = launcherJobConf.getInt(LauncherAM.OOZIE_LAUNCHER_PRIORITY_PROPERTY, -1);
@@ -1295,12 +1293,10 @@ public class JavaActionExecutor extends ActionExecutor {
             int defaultPriority = ConfigurationService.getInt(DEFAULT_LAUNCHER_PRIORITY);
             priority = defaultPriority;
         }
-        Priority pri = Records.newRecord(Priority.class);
-        pri.setPriority(priority);
-        appContext.setPriority(pri);
+        return priority;
     }
 
-    private void setResources(Configuration launcherJobConf, ApplicationSubmissionContext appContext) {
+    private void setResources(Configuration launcherJobConf, ApplicationSubmissionContext appContext, int priority) {
         int memory;
         if (launcherJobConf.get(LauncherAM.OOZIE_LAUNCHER_MEMORY_MB_PROPERTY) != null) {
             memory = launcherJobConf.getInt(LauncherAM.OOZIE_LAUNCHER_MEMORY_MB_PROPERTY, -1);
@@ -1320,8 +1316,11 @@ public class JavaActionExecutor extends ActionExecutor {
             Preconditions.checkArgument(defaultVcores > 0, "Default launcher vcores is 0 or negative");
             vcores = defaultVcores;
         }
-        Resource resource = Resource.newInstance(memory, vcores);
-        appContext.setResource(resource);
+
+        Collection<String> locality = launcherJobConf.getStringCollection(MRJobConfig.AM_STRICT_LOCALITY);
+
+        List<ResourceRequest> resourceRequests = AMLocalityHelper.generateResourceRequests(memory, vcores, priority, locality);
+        appContext.setAMContainerResourceRequests(resourceRequests);
     }
 
     private Map<String, String>  extractEnvVarsFromOozieLauncherProps(String oozieLauncherEnvProperty) {
@@ -1363,7 +1362,9 @@ public class JavaActionExecutor extends ActionExecutor {
                         final String key = propEntry.getKey();
                         final String value = propEntry.getValue();
                         actionConf.set(key, value);
+
                         LOG.debug("property : '" + key + "', value : '" + value + "'");
+
                     }
                 }
             }
