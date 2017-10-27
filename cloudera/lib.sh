@@ -29,16 +29,16 @@ function build() {
     echo ----
     echo
     mvn -f ${_POM} -e clean package -Pmr1 ${_MAVEN_FLAGS} -DskipTests \
-    -Dmaven.javadoc.skip=true -Dfindbugs.skip=true -Dcheckstyle.skip=true
+    -Dmaven.javadoc.skip=true -Dfindbugs.skip=true -Dcheckstyle.skip=true -B
     echo
     echo ----
     echo Building using MapReduce 2: ${_POM} with "${_MAVEN_FLAGS}"
     echo ----
     echo
     if [ "$_CODE_COVERAGE" == "true" ]; then
-      mvn -f ${_POM} -e clean install ${_MAVEN_FLAGS} -DskipTests -Pcloudera-clover -Dmaven.javadoc.skip=true
+      mvn -f ${_POM} -e clean install ${_MAVEN_FLAGS} -DskipTests -B -Pcloudera-clover -Dmaven.javadoc.skip=true
     else
-      mvn -f ${_POM} -e clean install ${_MAVEN_FLAGS} -DskipTests -Dmaven.javadoc.skip=true
+      mvn -f ${_POM} -e clean install ${_MAVEN_FLAGS} -DskipTests -B -Dmaven.javadoc.skip=true
     fi
   else
     echo
@@ -208,8 +208,8 @@ function setupJava() {
 
   case ${_JAVA_VERSION} in
     1.7)
-      MAVEN_OPTS="-Xmx2g -Xms512m -XX:MaxPermSize=384m"
-      JAVA_OPTS="-Xmx4g -Xms1g -XX:MaxPermSize=256m"
+      MAVEN_OPTS="-Xmx3g -Xms512m -XX:MaxPermSize=756m"
+      JAVA_OPTS="-Xmx4g -Xms1g -XX:MaxPermSize=512m"
       if [[ -z $JAVA7_HOME ]]; then
         echo JAVA7_HOME is not set
         exit 1
