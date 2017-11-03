@@ -133,7 +133,7 @@
                     <artifactId>netty</artifactId>
                 </exclusion>
                 <exclusion>
-                    <artifactId>hbase</artifactId>
+                    <artifactId>hbase-client</artifactId>
                     <groupId>org.apache.hbase</groupId>
                 </exclusion>
                 <exclusion>
