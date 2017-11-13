@@ -108,9 +108,9 @@
          <curator.version>${cdh.curator.version}</curator.version>
          <jackson.version>${cdh.jackson.version}</jackson.version>
          <log4j.version>${cdh.log4j.version}</log4j.version>
-         <activemq.version>5.13.3</activemq.version>
-         <httpcore.version>4.3.3</httpcore.version>
-         <httpclient.version>4.3.6</httpclient.version>
+         <activemq.version>5.15.2</activemq.version>
+         <httpcore.version>${cdh.httpcomponents.core.version}</httpcore.version>
+         <httpclient.version>${cdh.httpcomponents.version}</httpclient.version>
          <kyro.version>2.22</kyro.version>
          <javax.servlet.api.version>3.0.1</javax.servlet.api.version>
     </properties>
@@ -1343,7 +1343,7 @@
             <dependency>
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-lang3</artifactId>
-                <version>3.3.2</version>
+                <version>${cdh.commons-lang3.version}</version>
             </dependency>
 
             <dependency>
