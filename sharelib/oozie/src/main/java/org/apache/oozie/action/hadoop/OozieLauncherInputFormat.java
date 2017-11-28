@@ -29,67 +29,21 @@ import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RecordReader;
 import org.apache.hadoop.mapred.Reporter;
+
 /**
  * Dummy input format implementation of Oozie launcher jobs. It returns only one record.
  */
-public class OozieLauncherInputFormat implements InputFormat<Object, Object> {
+public class OozieLauncherInputFormat implements InputFormat<ObjectWritable, ObjectWritable> {
 
-    boolean isReadingDone = false;
-
-    public RecordReader<Object, Object> getRecordReader(InputSplit arg0, JobConf arg1, Reporter arg2)
-            throws IOException {
-        return new RecordReader<Object, Object>() {
-
-            @Override
-            public void close() throws IOException {
-            }
-
-            @Override
-            public float getProgress() throws IOException {
-                if (isReadingDone) {
-                    return 1.0f;
-                }
-                else
-                    return 0.0f;
-            }
-
-            @Override
-            public Object createKey() {
-                return new ObjectWritable();
-            }
-
-            @Override
-            public Object createValue() {
-                return new ObjectWritable();
-            }
-
-            @Override
-            public long getPos() throws IOException {
-                if (isReadingDone) {
-                    return 1;
-                }
-                else {
-                    return 0;
-                }
-            }
-
-            @Override
-            public boolean next(Object arg0, Object arg1) throws IOException {
-                if (isReadingDone) {
-                    return false;
-                }
-                else {
-                    isReadingDone = true;
-                    return true;
-                }
-            }
-
-        };
+    public RecordReader<ObjectWritable, ObjectWritable> getRecordReader(final InputSplit split,
+                                                                        final JobConf jobConf,
+                                                                        final Reporter reporter) throws IOException {
+        return new OneTimeRecordReader<>(ObjectWritable.class, ObjectWritable.class);
     }
 
     @Override
-    public InputSplit[] getSplits(JobConf arg0, int arg1) throws IOException {
-        return new InputSplit[] { new EmptySplit() };
+    public InputSplit[] getSplits(final JobConf jobConf, final int numSplits) throws IOException {
+        return new InputSplit[]{new EmptySplit()};
     }
 
     /**
@@ -98,11 +52,11 @@ public class OozieLauncherInputFormat implements InputFormat<Object, Object> {
     public static class EmptySplit implements InputSplit {
 
         @Override
-        public void write(DataOutput out) throws IOException {
+        public void write(final DataOutput out) throws IOException {
         }
 
         @Override
-        public void readFields(DataInput in) throws IOException {
+        public void readFields(final DataInput in) throws IOException {
         }
 
         @Override
@@ -115,5 +69,4 @@ public class OozieLauncherInputFormat implements InputFormat<Object, Object> {
             return new String[0];
         }
     }
-
 }
