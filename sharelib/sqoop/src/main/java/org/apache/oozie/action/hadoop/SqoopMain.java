@@ -19,14 +19,16 @@
 package org.apache.oozie.action.hadoop;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.util.Map;
+import java.io.Writer;
 import java.util.regex.Pattern;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.log4j.PropertyConfigurator;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.sqoop.Sqoop;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -43,6 +45,7 @@ public class SqoopMain extends LauncherMain {
     };
 
     private static final String SQOOP_LOG4J_PROPS = "sqoop-log4j.properties";
+    private static final String SQOOP_LOG4J2_XML = "sqoop-log4j2.xml";
 
     public static void main(String[] args) throws Exception {
         run(SqoopMain.class, args);
@@ -87,18 +90,9 @@ public class SqoopMain extends LauncherMain {
         logMasking("Sqoop Configuration Properties:", sqoopConf);
         return sqoopConf;
     }
-
-    private String setUpSqoopLog4J(Configuration sqoopConf) throws IOException {
-        //Logfile to capture job IDs
-        String hadoopJobId = System.getProperty("oozie.launcher.job.id");
-        if (hadoopJobId == null) {
-            throw new RuntimeException("Launcher Hadoop Job ID system property not set");
-        }
-
-        String logFile = new File("sqoop-oozie-" + hadoopJobId + ".log").getAbsolutePath();
-
-        String logLevel = sqoopConf.get("oozie.sqoop.log.level", "INFO");
-        String rootLogLevel = sqoopConf.get("oozie.action." + LauncherAMUtils.ROOT_LOGGER_LEVEL, "INFO");
+    private String setUpSqoopLog4J(final String rootLogLevel, final String logLevel) throws IOException {
+        System.out.println("Setting up log4j");
+        String logFile = getSqoopLogFile();
 
         log4jProperties.setProperty("log4j.rootLogger", rootLogLevel + ", A");
         log4jProperties.setProperty("log4j.logger.org.apache.sqoop", logLevel + ", A");
@@ -106,21 +100,65 @@ public class SqoopMain extends LauncherMain {
         log4jProperties.setProperty("log4j.appender.A", "org.apache.log4j.ConsoleAppender");
         log4jProperties.setProperty("log4j.appender.A.layout", "org.apache.log4j.PatternLayout");
         log4jProperties.setProperty("log4j.appender.A.layout.ConversionPattern", "%d [%t] %-5p %c %x - %m%n");
-
         log4jProperties.setProperty("log4j.appender.jobid", "org.apache.log4j.FileAppender");
         log4jProperties.setProperty("log4j.appender.jobid.file", logFile);
         log4jProperties.setProperty("log4j.appender.jobid.layout", "org.apache.log4j.PatternLayout");
         log4jProperties.setProperty("log4j.appender.jobid.layout.ConversionPattern", "%d [%t] %-5p %c %x - %m%n");
         log4jProperties.setProperty("log4j.logger.org.apache.hadoop.mapred", "INFO, jobid, A");
+        log4jProperties.setProperty("log4j.logger.org.apache.sqoop", String.format("%s, jobid, A", logLevel));
         log4jProperties.setProperty("log4j.logger.org.apache.hadoop.mapreduce.Job", "INFO, jobid, A");
         log4jProperties.setProperty("log4j.logger.org.apache.hadoop.yarn.client.api.impl.YarnClientImpl", "INFO, jobid");
 
+
         String localProps = new File(SQOOP_LOG4J_PROPS).getAbsolutePath();
         createFileWithContentIfNotExists(localProps, log4jProperties);
-
         PropertyConfigurator.configure(SQOOP_LOG4J_PROPS);
 
+        System.out.printf("log4j2 configuration file created at %s%n", localProps);
         return logFile;
+    }
+
+    private String setUpSqoopLog4J2(final String rootLogLevel) throws IOException {
+        System.out.println("Setting up log4j2");
+
+        final String logFile = getSqoopLogFile();
+        final File log4j2Xml = new File(SQOOP_LOG4J2_XML);
+        try (final Writer writer = new FileWriter(log4j2Xml)) {
+            final String logj2SettingsXml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+                    "<Configuration status=\"WARN\">\n" +
+                    "    <Appenders>\n" +
+                    "        <Console name=\"Console\" target=\"SYSTEM_OUT\">\n" +
+                    "            <PatternLayout pattern=\"%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n\"/>\n" +
+                    "        </Console>\n" +
+                    "        <File name=\"File\" fileName=\"" + logFile + "\">  \n" +
+                    "            <PatternLayout pattern=\"%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n\"/>\n" +
+                    "        </File> \n" +
+                    "    </Appenders>\n" +
+                    "    <Loggers>\n" +
+                    "        <Root level=\"" + rootLogLevel.toLowerCase() + "\">\n" +
+                    "            <AppenderRef ref=\"Console\"/>\n" +
+                    "            <AppenderRef ref=\"File\"/>\n" +
+                    "        </Root>\n" +
+                    "    </Loggers>\n" +
+                    "</Configuration>";
+            writer.write(logj2SettingsXml);
+        }
+
+        System.out.printf("log4j2 configuration file created at %s%n", log4j2Xml.getAbsolutePath());
+
+        final LoggerContext context = (LoggerContext) LogManager.getContext(false);
+        context.setConfigLocation(log4j2Xml.toURI()); // forces log4j2 reconfiguration
+        return logFile;
+    }
+
+    private String getSqoopLogFile() {
+        //Logfile to capture job IDs
+        String hadoopJobId = System.getProperty("oozie.launcher.job.id");
+        if (hadoopJobId == null) {
+            throw new RuntimeException("Launcher Hadoop Job ID system property not set");
+        }
+
+        return new File("sqoop-oozie-" + hadoopJobId + ".log").getAbsolutePath();
     }
 
     @Override
@@ -129,10 +167,21 @@ public class SqoopMain extends LauncherMain {
         System.out.println("Oozie Sqoop action configuration");
         System.out.println("=================================================================");
 
-        Configuration sqoopConf = setUpSqoopSite();
-        String logFile = setUpSqoopLog4J(sqoopConf);
+        final Configuration sqoopConf = setUpSqoopSite();
 
-        String[] sqoopArgs = ActionUtils.getStrings(sqoopConf, SqoopActionExecutor.SQOOP_ARGS);
+        final String logLevel = sqoopConf.get("oozie.sqoop.log.level", "INFO");
+        final String rootLogLevel = sqoopConf.get("oozie.action." + LauncherAMUtils.ROOT_LOGGER_LEVEL, "INFO");
+
+        String logFile;
+        // MAPREDUCE-6983 switches to slfj4 & log4j2. Need to setup log4j accordingly
+        if (isMapReduceUsingLog4j2()) {
+            logFile = setUpSqoopLog4J2(rootLogLevel);
+        }
+        else {
+            logFile = setUpSqoopLog4J(rootLogLevel, logLevel);
+        }
+
+        final String[] sqoopArgs = ActionUtils.getStrings(sqoopConf, SqoopActionExecutor.SQOOP_ARGS);
         if (sqoopArgs == null) {
             throw new RuntimeException("Action Configuration does not have [" + SqoopActionExecutor.SQOOP_ARGS + "] property");
         }
@@ -153,6 +202,11 @@ public class SqoopMain extends LauncherMain {
             System.out.println("\n<<< Invocation of Sqoop command completed <<<\n");
             writeExternalChildIDs(logFile, SQOOP_JOB_IDS_PATTERNS, "Sqoop");
         }
+    }
+
+    private boolean isMapReduceUsingLog4j2() throws NoSuchFieldException {
+        return org.apache.hadoop.mapreduce.Job.class.getDeclaredField("LOG").getType().
+                isAssignableFrom(org.slf4j.Logger.class);
     }
 
     protected void runSqoopJob(String[] args) throws Exception {
