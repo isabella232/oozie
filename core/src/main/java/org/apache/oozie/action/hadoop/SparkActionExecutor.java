@@ -96,7 +96,7 @@ public class SparkActionExecutor extends JavaActionExecutor {
         String sparkOpts = actionXml.getChildTextTrim("spark-opts", ns);
         if (!Strings.isNullOrEmpty(sparkOpts)) {
             // CLOUDERA-BUILD: Tell Spark not to localize Hadoop Configs to fix regression on kerberized cluster (CDH-32176)
-            sparkOpts +=  master.startsWith("yarn") ? "" : " --conf spark.yarn.localizeConfig=false";
+            sparkOpts +=  master.startsWith("yarn") ? " --conf spark.yarn.localizeConfig=false" : "";
             actionConf.set(SPARK_OPTS, sparkOpts.toString().trim());
         } else if (master.startsWith("yarn")){
             // CLOUDERA-BUILD: Tell Spark not to localize Hadoop Configs to fix regression on kerberized cluster (CDH-32176)
