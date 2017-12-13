@@ -413,7 +413,6 @@
             <groupId>org.datanucleus</groupId>
             <artifactId>datanucleus-core</artifactId>
             <version>4.1.6</version>
-            <scope>test</scope>
         </dependency>
     </dependencies>
 
