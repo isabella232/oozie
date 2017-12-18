@@ -23,6 +23,8 @@ import org.apache.hadoop.io.Writable;
 import org.apache.oozie.action.hadoop.FsActionExecutor;
 import org.apache.oozie.action.oozie.SubWorkflowActionExecutor;
 import org.apache.oozie.service.ConfigurationService;
+import org.apache.oozie.service.SchemaService;
+import org.apache.oozie.service.Services;
 import org.apache.oozie.util.ELUtils;
 import org.apache.oozie.util.IOUtils;
 import org.apache.oozie.util.XConfiguration;
@@ -65,7 +67,10 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.zip.*;
+import java.util.zip.Deflater;
+import java.util.zip.DeflaterOutputStream;
+import java.util.zip.Inflater;
+import java.util.zip.InflaterInputStream;
 
 /**
  * Class to parse and validate workflow xml
@@ -191,7 +196,7 @@ public class LiteWorkflowAppParser {
             String strDef = writer.toString();
 
             if (schema != null) {
-                Validator validator = schema.newValidator();
+                Validator validator = SchemaService.getValidator(schema);
                 validator.validate(new StreamSource(new StringReader(strDef)));
             }
 
