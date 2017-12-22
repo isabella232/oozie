@@ -94,7 +94,8 @@
          <sqoop.version>${cdh.sqoop.version}</sqoop.version>
          <spark.version>${cdh.spark.version}</spark.version>
          <spark-avro.version>${cdh.spark-avro.version}</spark-avro.version>
-	     <hive.jline.version>2.11</hive.jline.version>
+         <spark-servlet_api.version>3.1.0</spark-servlet_api.version>
+         <hive.jline.version>2.11</hive.jline.version>
          <hive.classifier>core</hive.classifier>
          <pig.version>0.16.0</pig.version>
          <pig.classifier></pig.classifier>
