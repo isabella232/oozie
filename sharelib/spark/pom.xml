@@ -407,6 +407,19 @@
             <artifactId>datanucleus-core</artifactId>
             <version>4.1.6</version>
         </dependency>
+
+        <dependency>
+            <groupId>com.cloudera.spark</groupId>
+            <artifactId>spark-lineage_${spark.scala.binary.version}</artifactId>
+            <version>${spark.version}</version>
+            <scope>compile</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.hadoop</groupId>
+                    <artifactId>hadoop-common</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
     </dependencies>
 
     <build>
