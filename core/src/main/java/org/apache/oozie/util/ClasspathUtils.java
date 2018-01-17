@@ -20,10 +20,12 @@ package org.apache.oozie.util;
 
 import com.google.common.annotations.VisibleForTesting;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileContext;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.MRConfig;
 import org.apache.hadoop.mapreduce.MRJobConfig;
+import org.apache.hadoop.mapreduce.filecache.DistributedCache;
 import org.apache.hadoop.mapreduce.v2.util.MRApps;
 import org.apache.hadoop.util.StringUtils;
 import org.apache.hadoop.yarn.api.ApplicationConstants;
@@ -32,6 +34,7 @@ import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -90,7 +93,7 @@ public class ClasspathUtils {
     }
 
     // Adapted from MRApps#setClasspath
-    public static void addMapReduceToClasspath(Map<String, String> env, Configuration conf) {
+    public static void addMapReduceToClasspath(Map<String, String> env, Configuration conf) throws IOException {
         boolean crossPlatform = conf.getBoolean(MRConfig.MAPREDUCE_APP_SUBMISSION_CROSS_PLATFORM,
                 MRConfig.DEFAULT_MAPREDUCE_APP_SUBMISSION_CROSS_PLATFORM);
 
@@ -100,6 +103,48 @@ public class ClasspathUtils {
                         : StringUtils.getStrings(MRJobConfig.DEFAULT_MAPREDUCE_APPLICATION_CLASSPATH))) {
             MRApps.addToEnvironment(env, ApplicationConstants.Environment.CLASSPATH.name(),
                     c.trim(), conf);
+        }
+        addMRFrameworkToDistributedCache(conf);
+    }
+
+    /**
+     * Copied over from org.apache.hadoop.mapreduce.JobSubmitter
+     * @param conf the configuration
+     * @throws IOException in case of IO error
+     */
+    private static void addMRFrameworkToDistributedCache(Configuration conf)
+            throws IOException {
+        String framework =
+                conf.get(MRJobConfig.MAPREDUCE_APPLICATION_FRAMEWORK_PATH, "");
+        if (!framework.isEmpty()) {
+            URI uri;
+            try {
+                uri = new URI(framework);
+            } catch (URISyntaxException e) {
+                throw new IllegalArgumentException("Unable to parse '" + framework
+                        + "' as a URI, check the setting for "
+                        + MRJobConfig.MAPREDUCE_APPLICATION_FRAMEWORK_PATH, e);
+            }
+
+            String linkedName = uri.getFragment();
+
+            // resolve any symlinks in the URI path so using a "current" symlink
+            // to point to a specific version shows the specific version
+            // in the distributed cache configuration
+            FileSystem fs = FileSystem.get(uri, conf);
+            Path frameworkPath = fs.makeQualified(
+                    new Path(uri.getScheme(), uri.getAuthority(), uri.getPath()));
+            FileContext fc = FileContext.getFileContext(frameworkPath.toUri(), conf);
+            frameworkPath = fc.resolvePath(frameworkPath);
+            uri = frameworkPath.toUri();
+            try {
+                uri = new URI(uri.getScheme(), uri.getAuthority(), uri.getPath(),
+                        null, linkedName);
+            } catch (URISyntaxException e) {
+                throw new IllegalArgumentException(e);
+            }
+
+            DistributedCache.addCacheArchive(uri, conf);
         }
     }
 
