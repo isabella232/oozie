@@ -1173,6 +1173,7 @@ public class JavaActionExecutor extends ActionExecutor {
         yarnACL.setACLs(amContainer);
 
         final String user = actionContext.getWorkflow().getUser();
+        setEnvironmentVariables(launcherJobConf, amContainer);
         // Set the resources to localize
         Map<String, LocalResource> localResources = new HashMap<String, LocalResource>();
         ClientDistributedCacheManager.determineTimestampsAndCacheVisibilities(launcherJobConf);
@@ -1188,7 +1189,6 @@ public class JavaActionExecutor extends ActionExecutor {
         localResources.put(LauncherAM.ACTION_CONF_XML, actionConfLR);
         amContainer.setLocalResources(localResources);
 
-        setEnvironmentVariables(launcherJobConf, amContainer);
 
         List<String> vargs = createCommand(launcherJobConf, actionContext);
         setJavaOpts(launcherJobConf, actionXml, vargs);
