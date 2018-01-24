@@ -108,7 +108,7 @@
          <curator.version>${cdh.curator.version}</curator.version>
          <jackson.version>${cdh.jackson.version}</jackson.version>
          <log4j.version>${cdh.log4j.version}</log4j.version>
-         <activemq.version>5.13.3</activemq.version>
+         <activemq.version>${cdh.activemq.version}</activemq.version>
          <httpcore.version>${cdh.httpcomponents.core.version}</httpcore.version>
          <httpclient.version>${cdh.httpcomponents.version}</httpclient.version>
          <kyro.version>2.22</kyro.version>
