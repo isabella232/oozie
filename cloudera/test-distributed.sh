@@ -12,6 +12,9 @@ export JAVA8_HOME=$JAVA_1_8_HOME
 DIR="$( cd $( dirname ${BASH_SOURCE[0]} )  && pwd )"
 cd $DIR
 
+# activate mvn-gbn wrapper
+mv "$(which mvn-gbn-wrapper)" "$(dirname "$(which mvn-gbn-wrapper)")/mvn"
+
 # Build the project
 $DIR/build.sh
 
