@@ -473,7 +473,7 @@
                                    <type>zip</type>
                                    <overWrite>true</overWrite>
                                    <outputDirectory>${project.build.directory}/partial-sharelib/share/lib/spark</outputDirectory>
-                                   <destFileName>py4j-src.zip</destFileName>   <!-- PySpark needs it to be named this -->
+                                   <destFileName>py4j-0.10.4-src.zip</destFileName>   <!-- PySpark needs it to be named this -->
                                </artifactItem>
                            </artifactItems>
                        </configuration>
