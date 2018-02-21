@@ -232,6 +232,12 @@
         </dependency>
         <dependency>
             <groupId>org.apache.spark</groupId>
+            <artifactId>spark-streaming-kafka-0-10_${spark.scala.binary.version}</artifactId>
+            <version>${spark.version}</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.spark</groupId>
             <artifactId>spark-streaming-flume_${spark.scala.binary.version}</artifactId>
             <version>${spark.version}</version>
             <scope>compile</scope>
