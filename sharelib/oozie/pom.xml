@@ -22,12 +22,12 @@
     <parent>
         <groupId>org.apache.oozie</groupId>
         <artifactId>oozie-main</artifactId>
-        <version>5.0.0-cdh6.x-SNAPSHOT</version>
+        <version>5.0.0-cdh6.0.x-SNAPSHOT</version>
         <relativePath>../..</relativePath>
     </parent>
     <groupId>org.apache.oozie</groupId>
     <artifactId>oozie-sharelib-oozie</artifactId>
-    <version>5.0.0-cdh6.x-SNAPSHOT</version>
+    <version>5.0.0-cdh6.0.x-SNAPSHOT</version>
     <description>Apache Oozie Share Lib Oozie</description>
     <name>Apache Oozie Share Lib Oozie</name>
     <packaging>jar</packaging>
@@ -138,4 +138,3 @@
         </plugins>
     </build>
 </project>
-
