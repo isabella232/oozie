@@ -71,6 +71,8 @@ import org.apache.oozie.util.XConfiguration;
 import org.apache.oozie.util.XLog;
 import org.apache.oozie.util.XmlUtils;
 import org.apache.oozie.workflow.WorkflowInstance;
+import org.junit.Ignore;
+import org.junit.Test;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -465,7 +467,9 @@ public class TestRecoveryService extends XDataTestCase {
 
     }
 
-    public void testCoordActionRecoveryServiceForWaitingRegisterPartition() throws Exception {
+    @Test
+    @Ignore
+    public void _testCoordActionRecoveryServiceForWaitingRegisterPartition() throws Exception {
         services.destroy();
         services = super.setupServicesForHCatalog();
         services.getConf().set(URIHandlerService.URI_HANDLERS,
