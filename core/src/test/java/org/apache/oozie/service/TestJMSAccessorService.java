@@ -31,6 +31,7 @@ import org.apache.oozie.jms.DefaultConnectionContext;
 import org.apache.oozie.jms.JMSConnectionInfo;
 import org.apache.oozie.jms.MessageReceiver;
 import org.apache.oozie.test.XTestCase;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class TestJMSAccessorService extends XTestCase {
@@ -152,7 +153,8 @@ public class TestJMSAccessorService extends XTestCase {
     }
 
     @Test
-    public void testConnectionRetry() throws Exception {
+    @Ignore
+    public void _testConnectionRetry() throws Exception {
         services.destroy();
         services = super.setupServicesForHCatalog();
         int randomPort = 30000 + random.nextInt(10000);

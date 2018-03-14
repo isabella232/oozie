@@ -23,6 +23,7 @@ import java.util.Collection;
 import org.apache.oozie.dependency.hcat.EhcacheHCatDependencyCache;
 import org.apache.oozie.util.HCatURI;
 import org.apache.oozie.util.XLog;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class TestPartitionDependencyManagerEhcache extends TestPartitionDependencyManagerService {
@@ -42,9 +43,10 @@ public class TestPartitionDependencyManagerEhcache extends TestPartitionDependen
 
     @Override
     @Test
-    public void testPartitionDependency() throws Exception {
+    @Ignore
+    public void _testPartitionDependency() throws Exception {
         setupServices(null);
-        super.testPartitionDependency();
+        super._testPartitionDependency();
     }
 
     @Test

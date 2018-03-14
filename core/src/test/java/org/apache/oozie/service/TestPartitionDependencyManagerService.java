@@ -32,6 +32,7 @@ import org.apache.oozie.service.Services;
 import org.apache.oozie.test.XDataTestCase;
 import org.apache.oozie.util.HCatURI;
 import org.apache.oozie.util.XLog;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -57,7 +58,8 @@ public class TestPartitionDependencyManagerService extends XDataTestCase {
     }
 
     @Test
-    public void testPartitionDependency() throws Exception {
+    @Ignore
+    public void _testPartitionDependency() throws Exception {
 
         // Test all APIs related to dependency caching
         String actionId1 = "1234465451";
