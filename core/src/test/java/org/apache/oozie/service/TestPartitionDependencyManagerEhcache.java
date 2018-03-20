@@ -58,7 +58,8 @@ public class TestPartitionDependencyManagerEhcache extends TestPartitionDependen
     }
 
     @Test
-    public void testMemoryUsageAndSpeedOverflowToDisk() throws Exception {
+    @Ignore
+    public void _testMemoryUsageAndSpeedOverflowToDisk() throws Exception {
         setupServices("testspilltodisk"); // maxElementsInMemory="20000". 2/3 on disk
         // Insert and retrieve are between 15-30 seconds
         // When run individually memIncreaseAfterInsert is < 45MB. But running with
