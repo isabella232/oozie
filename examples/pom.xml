@@ -22,11 +22,11 @@
     <parent>
         <groupId>org.apache.oozie</groupId>
         <artifactId>oozie-main</artifactId>
-        <version>5.1.0</version>
+        <version>5.1.0-cdh6.x-SNAPSHOT</version>
     </parent>
 
     <artifactId>oozie-examples</artifactId>
-    <version>5.1.0</version>
+    <version>5.1.0-cdh6.x-SNAPSHOT</version>
     <description>Apache Oozie Examples</description>
     <name>Apache Oozie Examples</name>
     <packaging>jar</packaging>
@@ -127,6 +127,10 @@
                     <artifactId>mesos</artifactId>
                 </exclusion>
                 <exclusion>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+                <exclusion>
                     <groupId>org.apache.hadoop</groupId>
                     <artifactId>hadoop-client</artifactId>
                 </exclusion>
@@ -195,20 +199,6 @@
                 </plugins>
             </build>
         </profile>
-        <profile>
-            <id>hadoop-3</id>
-            <activation>
-                <activeByDefault>false</activeByDefault>
-            </activation>
-            <dependencies>
-                <dependency>
-                    <groupId>org.apache.hadoop</groupId>
-                    <artifactId>hadoop-common</artifactId>
-                    <scope>provided</scope>
-                </dependency>
-            </dependencies>
-        </profile>
     </profiles>
 
 </project>
-
