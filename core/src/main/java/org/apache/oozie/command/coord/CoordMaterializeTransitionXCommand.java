@@ -436,7 +436,6 @@ public class CoordMaterializeTransitionXCommand extends MaterializeTransitionXCo
         }
 
         boolean firstMater = true;
-
         while (effStart.compareTo(end) < 0 && (ignoreMaxActions || maxActionToBeCreated-- > 0)) {
             if (pause != null && effStart.compareTo(pause) >= 0) {
                 break;
@@ -568,10 +567,8 @@ public class CoordMaterializeTransitionXCommand extends MaterializeTransitionXCo
             job.setStatus(Job.Status.RUNNING);
         }
         job.setPending();
-        Calendar end = Calendar.getInstance();
-        end.setTime(jobEndTime);
 
-        if (end.getTime().compareTo(endMatdTime) <= 0) {
+        if (jobEndTime.compareTo(endMatdTime) <= 0) {
             LOG.info("[" + job.getId() + "]: all actions have been materialized, set pending to true");
             // set doneMaterialization to true when materialization is done
             job.setDoneMaterialization();
