@@ -1,3 +1,7 @@
+-- Oozie 5.1.0 release (trunk - unreleased)
+
+OOZIE-2494 Cron syntax not handling DST properly (kmarton via andras.piros)
+
 -- Oozie 5.0.0 release
 
 OOZIE-3176 Oozie-core fails with checkstyle errors (alishap via andras.piros)
