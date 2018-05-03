@@ -20,6 +20,9 @@ package org.apache.oozie.command.coord;
 
 import java.io.File;
 import java.sql.Timestamp;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
@@ -59,6 +62,9 @@ import org.jdom.Element;
 @SuppressWarnings("deprecation")
 public class TestCoordMaterializeTransitionXCommand extends XDataTestCase {
 
+    private int oneHourInSeconds = (int) java.util.concurrent.TimeUnit.HOURS.toSeconds(1);
+
+
     @Override
     protected void setUp() throws Exception {
         super.setUp();
@@ -75,8 +81,12 @@ public class TestCoordMaterializeTransitionXCommand extends XDataTestCase {
         Date startTime = DateUtils.parseDateOozieTZ("2009-03-06T010:00Z");
         Date endTime = DateUtils.parseDateOozieTZ("2009-03-11T10:00Z");
         CoordinatorJobBean job = addRecordToCoordJobTable(CoordinatorJob.Status.RUNNING, startTime, endTime, false, false, 0);
-        new CoordMaterializeTransitionXCommand(job.getId(), 3600).call();
+        new CoordMaterializeTransitionXCommand(job.getId(), hoursToSeconds(1)).call();
         checkCoordAction(job.getId() + "@1");
+    }
+
+    private int hoursToSeconds(final int hours) {
+        return new Long(java.util.concurrent.TimeUnit.HOURS.toSeconds(hours)).intValue();
     }
 
     public void testActionMaterForHcatalog() throws Exception {
@@ -87,7 +97,7 @@ public class TestCoordMaterializeTransitionXCommand extends XDataTestCase {
         Date endTime = DateUtils.parseDateOozieTZ("2009-03-11T10:00Z");
         CoordinatorJobBean job = addRecordToCoordJobTableForWaiting("coord-job-for-matd-hcat.xml",
                 CoordinatorJob.Status.RUNNING, startTime, endTime, false, false, 0);
-        new CoordMaterializeTransitionXCommand(job.getId(), 3600).call();
+        new CoordMaterializeTransitionXCommand(job.getId(), hoursToSeconds(1)).call();
         CoordinatorActionBean actionBean = getCoordAction(job.getId() + "@1");
         assertEquals("file://dummyhdfs/2009/05/_SUCCESS" + CoordCommandUtils.RESOLVED_UNRESOLVED_SEPARATOR
                 + "${coord:latestRange(-1,0)}", actionBean.getMissingDependencies());
@@ -106,7 +116,7 @@ public class TestCoordMaterializeTransitionXCommand extends XDataTestCase {
         CoordinatorJobBean job = addRecordToCoordJobTableForWaiting("coord-job-for-matd-neg-hcat.xml",
                 CoordinatorJob.Status.RUNNING, startTime, endTime, false, false, 0);
         try {
-            new CoordMaterializeTransitionXCommand(job.getId(), 3600).call();
+            new CoordMaterializeTransitionXCommand(job.getId(), hoursToSeconds(1)).call();
             fail("Expected Command exception but didn't catch any");
         }
         catch (CommandException e) {
@@ -125,7 +135,7 @@ public class TestCoordMaterializeTransitionXCommand extends XDataTestCase {
         Date endTime = DateUtils.parseDateOozieTZ("2009-03-11T10:00Z");
         CoordinatorJobBean job = addRecordToCoordJobTableForWaiting("coord-job-for-matd-relative.xml",
                 CoordinatorJob.Status.RUNNING, startTime, endTime, false, false, 0);
-        new CoordMaterializeTransitionXCommand(job.getId(), 3600).call();
+        new CoordMaterializeTransitionXCommand(job.getId(), hoursToSeconds(1)).call();
     }
 
     public void testActionMaterWithCronFrequency1() throws Exception {
@@ -133,16 +143,17 @@ public class TestCoordMaterializeTransitionXCommand extends XDataTestCase {
         Date endTime = DateUtils.parseDateOozieTZ("2013-07-18T01:00Z");
         CoordinatorJobBean job = addRecordToCoordJobTable(CoordinatorJob.Status.RUNNING, startTime, endTime, null,
                 "10,20 * * * *");
-        new CoordMaterializeTransitionXCommand(job.getId(), 3600).call();
+        new CoordMaterializeTransitionXCommand(job.getId(), hoursToSeconds(1)).call();
         Date[] nominalTimes = new Date[] {DateUtils.parseDateOozieTZ("2013-07-18T00:10Z"),
                 DateUtils.parseDateOozieTZ("2013-07-18T00:20Z")};
-        checkCoordActionsNominalTime(job.getId(), 2, nominalTimes);
+        final int expectedNominalTimeCount = 2;
+        checkCoordActionsNominalTime(job.getId(), expectedNominalTimeCount, nominalTimes);
 
         try {
             JPAService jpaService = Services.get().get(JPAService.class);
             job =  jpaService.execute(new CoordJobGetJPAExecutor(job.getId()));
             assertTrue(job.isDoneMaterialization());
-            assertEquals(job.getLastActionNumber(), 2);
+            assertEquals(job.getLastActionNumber(), expectedNominalTimeCount);
             assertEquals(job.getNextMaterializedTime(), DateUtils.parseDateOozieTZ("2013-07-18T01:10Z"));
         }
         catch (JPAExecutorException se) {
@@ -156,7 +167,7 @@ public class TestCoordMaterializeTransitionXCommand extends XDataTestCase {
         Date endTime = DateUtils.parseDateOozieTZ("2013-07-18T01:00Z");
         CoordinatorJobBean job = addRecordToCoordJobTable(CoordinatorJob.Status.RUNNING, startTime, endTime, null,
                 "10-20 * * * *");
-        new CoordMaterializeTransitionXCommand(job.getId(), 3600).call();
+        new CoordMaterializeTransitionXCommand(job.getId(), hoursToSeconds(1)).call();
         Date[] nominalTimes = new Date[] {DateUtils.parseDateOozieTZ("2013-07-18T00:10Z"),
                 DateUtils.parseDateOozieTZ("2013-07-18T00:11Z"),
                 DateUtils.parseDateOozieTZ("2013-07-18T00:12Z"),
@@ -168,13 +179,14 @@ public class TestCoordMaterializeTransitionXCommand extends XDataTestCase {
                 DateUtils.parseDateOozieTZ("2013-07-18T00:18Z"),
                 DateUtils.parseDateOozieTZ("2013-07-18T00:19Z"),
                 DateUtils.parseDateOozieTZ("2013-07-18T00:20Z"),};
-        checkCoordActionsNominalTime(job.getId(), 11, nominalTimes);
+        final int expectedNominalTimeCount = 11;
+        checkCoordActionsNominalTime(job.getId(), expectedNominalTimeCount, nominalTimes);
 
         try {
             JPAService jpaService = Services.get().get(JPAService.class);
             job =  jpaService.execute(new CoordJobGetJPAExecutor(job.getId()));
             assertTrue(job.isDoneMaterialization());
-            assertEquals(job.getLastActionNumber(), 11);
+            assertEquals(job.getLastActionNumber(), expectedNominalTimeCount);
             assertEquals(job.getNextMaterializedTime(), DateUtils.parseDateOozieTZ("2013-07-18T01:10Z"));
         }
         catch (JPAExecutorException se) {
@@ -188,14 +200,15 @@ public class TestCoordMaterializeTransitionXCommand extends XDataTestCase {
         Date endTime = DateUtils.parseDateOozieTZ("2013-07-18T01:00Z");
         CoordinatorJobBean job = addRecordToCoordJobTable(CoordinatorJob.Status.RUNNING, startTime, endTime, null,
                 "0/15 2 * 5-7 4,5");
-        new CoordMaterializeTransitionXCommand(job.getId(), 3600).call();
-        checkCoordActionsNominalTime(job.getId(), 0, new Date[]{});
+        new CoordMaterializeTransitionXCommand(job.getId(), hoursToSeconds(1)).call();
+        final int expectedNominalTimeCount = 0;
+        checkCoordActionsNominalTime(job.getId(), expectedNominalTimeCount, new Date[]{});
 
         try {
             JPAService jpaService = Services.get().get(JPAService.class);
             job =  jpaService.execute(new CoordJobGetJPAExecutor(job.getId()));
             assertTrue(job.isDoneMaterialization());
-            assertEquals(job.getLastActionNumber(), 0);
+            assertEquals(job.getLastActionNumber(), expectedNominalTimeCount);
             assertEquals(job.getNextMaterializedTime(), DateUtils.parseDateOozieTZ("2013-07-18T02:00Z"));
         }
         catch (JPAExecutorException se) {
@@ -209,19 +222,19 @@ public class TestCoordMaterializeTransitionXCommand extends XDataTestCase {
         Date endTime = DateUtils.parseDateOozieTZ("2013-07-18T01:00Z");
         CoordinatorJobBean job = addRecordToCoordJobTable(CoordinatorJob.Status.RUNNING, startTime, endTime, null,
                 "0/15 * * 5-7 4,5");
-        new CoordMaterializeTransitionXCommand(job.getId(), 3600).call();
+        new CoordMaterializeTransitionXCommand(job.getId(), hoursToSeconds(1)).call();
         Date[] nominalTimes = new Date[] {DateUtils.parseDateOozieTZ("2013-07-18T00:00Z"),
                 DateUtils.parseDateOozieTZ("2013-07-18T00:15Z"),
                 DateUtils.parseDateOozieTZ("2013-07-18T00:30Z"),
                 DateUtils.parseDateOozieTZ("2013-07-18T00:45Z"),};
-        checkCoordActionsNominalTime(job.getId(), 4, nominalTimes);
-
+        final int expectedNominalTimeCount = 4;
+        checkCoordActionsNominalTime(job.getId(), expectedNominalTimeCount, nominalTimes);
 
         try {
             JPAService jpaService = Services.get().get(JPAService.class);
             job =  jpaService.execute(new CoordJobGetJPAExecutor(job.getId()));
             assertTrue(job.isDoneMaterialization());
-            assertEquals(job.getLastActionNumber(), 4);
+            assertEquals(job.getLastActionNumber(), expectedNominalTimeCount);
             assertEquals(job.getNextMaterializedTime(), DateUtils.parseDateOozieTZ("2013-07-18T01:00Z"));
         }
         catch (JPAExecutorException se) {
@@ -235,17 +248,18 @@ public class TestCoordMaterializeTransitionXCommand extends XDataTestCase {
         Date endTime = DateUtils.parseDateOozieTZ("2013-07-18T01:00Z");
         CoordinatorJobBean job = addRecordToCoordJobTable(CoordinatorJob.Status.RUNNING, startTime, endTime, null,
                 "20/15 * * 5-7 4,5");
-        new CoordMaterializeTransitionXCommand(job.getId(), 3600).call();
+        new CoordMaterializeTransitionXCommand(job.getId(), hoursToSeconds(1)).call();
         Date[] nominalTimes = new Date[] {DateUtils.parseDateOozieTZ("2013-07-18T00:20Z"),
                 DateUtils.parseDateOozieTZ("2013-07-18T00:35Z"),
                 DateUtils.parseDateOozieTZ("2013-07-18T00:50Z"),};
-        checkCoordActionsNominalTime(job.getId(), 3, nominalTimes);
+        final int expectedNominalTimeCount = 3;
+        checkCoordActionsNominalTime(job.getId(), expectedNominalTimeCount, nominalTimes);
 
         try {
             JPAService jpaService = Services.get().get(JPAService.class);
             job =  jpaService.execute(new CoordJobGetJPAExecutor(job.getId()));
             assertTrue(job.isDoneMaterialization());
-            assertEquals(job.getLastActionNumber(), 3);
+            assertEquals(job.getLastActionNumber(), expectedNominalTimeCount);
             assertEquals(job.getNextMaterializedTime(), DateUtils.parseDateOozieTZ("2013-07-18T01:20Z"));
         }
         catch (JPAExecutorException se) {
@@ -259,17 +273,18 @@ public class TestCoordMaterializeTransitionXCommand extends XDataTestCase {
         Date endTime = DateUtils.parseDateOozieTZ("2013-07-18T01:00Z");
         CoordinatorJobBean job = addRecordToCoordJobTable(CoordinatorJob.Status.RUNNING, startTime, endTime, null,
                 "20");
-        new CoordMaterializeTransitionXCommand(job.getId(), 3600).call();
+        new CoordMaterializeTransitionXCommand(job.getId(), hoursToSeconds(1)).call();
         Date[] nominalTimes = new Date[] {DateUtils.parseDateOozieTZ("2013-07-18T00:00Z"),
                 DateUtils.parseDateOozieTZ("2013-07-18T00:20Z"),
                 DateUtils.parseDateOozieTZ("2013-07-18T00:40Z"),};
-        checkCoordActionsNominalTime(job.getId(), 3, nominalTimes);
+        final int expectedNominalTimeCount = 3;
+        checkCoordActionsNominalTime(job.getId(), expectedNominalTimeCount, nominalTimes);
 
         try {
             JPAService jpaService = Services.get().get(JPAService.class);
             job =  jpaService.execute(new CoordJobGetJPAExecutor(job.getId()));
             assertTrue(job.isDoneMaterialization());
-            assertEquals(job.getLastActionNumber(), 3);
+            assertEquals(job.getLastActionNumber(), expectedNominalTimeCount);
             assertEquals(job.getNextMaterializedTime(), DateUtils.parseDateOozieTZ("2013-07-18T01:00Z"));
         }
         catch (JPAExecutorException se) {
@@ -283,17 +298,18 @@ public class TestCoordMaterializeTransitionXCommand extends XDataTestCase {
         Date endTime = DateUtils.parseDateOozieTZ("2013-07-18T01:00Z");
         CoordinatorJobBean job = addRecordToCoordJobTable(CoordinatorJob.Status.RUNNING, startTime, endTime, null,
                 "20/15 * * 7,10 THU");
-        new CoordMaterializeTransitionXCommand(job.getId(), 3600).call();
+        new CoordMaterializeTransitionXCommand(job.getId(), hoursToSeconds(1)).call();
         Date[] nominalTimes = new Date[] {DateUtils.parseDateOozieTZ("2013-07-18T00:20Z"),
                 DateUtils.parseDateOozieTZ("2013-07-18T00:35Z"),
                 DateUtils.parseDateOozieTZ("2013-07-18T00:50Z"),};
-        checkCoordActionsNominalTime(job.getId(), 3, nominalTimes);
+        final int expectedNominalTimeCount = 3;
+        checkCoordActionsNominalTime(job.getId(), expectedNominalTimeCount, nominalTimes);
 
         try {
             JPAService jpaService = Services.get().get(JPAService.class);
             job =  jpaService.execute(new CoordJobGetJPAExecutor(job.getId()));
             assertTrue(job.isDoneMaterialization());
-            assertEquals(job.getLastActionNumber(), 3);
+            assertEquals(expectedNominalTimeCount, job.getLastActionNumber());
             assertEquals(job.getNextMaterializedTime(), DateUtils.parseDateOozieTZ("2013-07-18T01:20Z"));
         }
         catch (JPAExecutorException se) {
@@ -310,17 +326,18 @@ public class TestCoordMaterializeTransitionXCommand extends XDataTestCase {
         job.setMatThrottling(3);
         CoordJobQueryExecutor.getInstance().executeUpdate(CoordJobQuery.UPDATE_COORD_JOB, job);
 
-        new CoordMaterializeTransitionXCommand(job.getId(), 3600).call();
+        new CoordMaterializeTransitionXCommand(job.getId(), hoursToSeconds(1)).call();
         Date[] nominalTimes = new Date[] {DateUtils.parseDateOozieTZ("2013-07-18T00:00Z"),
                 DateUtils.parseDateOozieTZ("2013-07-18T00:10Z"),
                 DateUtils.parseDateOozieTZ("2013-07-18T00:20Z")};
-        checkCoordActionsNominalTime(job.getId(), 3, nominalTimes);
+        final int expectedNominalTimeCount = 3;
+        checkCoordActionsNominalTime(job.getId(), expectedNominalTimeCount, nominalTimes);
 
         try {
             JPAService jpaService = Services.get().get(JPAService.class);
             job =  jpaService.execute(new CoordJobGetJPAExecutor(job.getId()));
             assertFalse(job.isDoneMaterialization());
-            assertEquals(3, job.getLastActionNumber());
+            assertEquals(expectedNominalTimeCount, job.getLastActionNumber());
             assertEquals(DateUtils.parseDateOozieTZ("2013-07-18T00:30Z"), job.getNextMaterializedTime());
         }
         catch (JPAExecutorException se) {
@@ -342,19 +359,20 @@ public class TestCoordMaterializeTransitionXCommand extends XDataTestCase {
         job.setTimeUnit(Timeunit.CRON);
         CoordJobQueryExecutor.getInstance().executeUpdate(CoordJobQuery.UPDATE_COORD_JOB, job);
 
-        new CoordMaterializeTransitionXCommand(job.getId(), 3600).call();
+        new CoordMaterializeTransitionXCommand(job.getId(), hoursToSeconds(1)).call();
         final String startPlusOneHour = "2013-03-10T09:00Z";
         final String startPlusTwoHours = "2013-03-10T10:00Z";
         final Date[] nominalTimes = new Date[] {DateUtils.parseDateOozieTZ(startInThePast),
                 DateUtils.parseDateOozieTZ(startPlusOneHour),
                 DateUtils.parseDateOozieTZ(startPlusTwoHours)};
-        checkCoordActionsNominalTime(job.getId(), 3, nominalTimes);
+        final int expectedNominalTimeCount = 3;
+        checkCoordActionsNominalTime(job.getId(), expectedNominalTimeCount, nominalTimes);
 
         try {
             final JPAService jpaService = Services.get().get(JPAService.class);
             job =  jpaService.execute(new CoordJobGetJPAExecutor(job.getId()));
             assertFalse("coordinator job shouldn't have yet been materialized", job.isDoneMaterialization());
-            assertEquals("coordinator action count mismatch", 3, job.getLastActionNumber());
+            assertEquals("coordinator action count mismatch", expectedNominalTimeCount, job.getLastActionNumber());
             final String startPlusThreeHours = "2013-03-10T11:00Z";
             assertEquals("coordinator next materialization time mismatch",
                     DateUtils.parseDateOozieTZ(startPlusThreeHours), job.getNextMaterializedTime());
@@ -365,26 +383,32 @@ public class TestCoordMaterializeTransitionXCommand extends XDataTestCase {
         }
     }
 
-    public void testCronFrequencyCatchupThrottleEqualsDuration() throws Exception {
+    public void testCronFrequencyCatchupThrottleEqualsDurationDSTChange() throws Exception {
         final String startInThePast = "2013-03-10T08:00Z";
-        final Date startTime = DateUtils.parseDateOozieTZ(startInThePast);
+        final Date startTimeBeforeDSTChange = DateUtils.parseDateOozieTZ(startInThePast);
         final String startPlusTwoHoursAndSome = "2013-03-10T10:01Z";
-        final Date endTime = DateUtils.parseDateOozieTZ(startPlusTwoHoursAndSome);
-        CoordinatorJobBean job = addRecordToCoordJobTable(CoordinatorJob.Status.PREP, startTime, endTime, false, false, 0);
-        job.setNextMaterializedTime(startTime);
+        final Date endTimeAfterDSTChange = DateUtils.parseDateOozieTZ(startPlusTwoHoursAndSome);
+        CoordinatorJobBean job = addRecordToCoordJobTable(CoordinatorJob.Status.PREP,
+                startTimeBeforeDSTChange,
+                endTimeAfterDSTChange,
+                false,
+                false,
+                0);
+        job.setNextMaterializedTime(startTimeBeforeDSTChange);
         job.setMatThrottling(3);
         final String everyHour = "0 * * * *";
         job.setFrequency(everyHour);
         job.setTimeUnit(Timeunit.CRON);
         CoordJobQueryExecutor.getInstance().executeUpdate(CoordJobQuery.UPDATE_COORD_JOB, job);
 
-        new CoordMaterializeTransitionXCommand(job.getId(), 3600).call();
+        new CoordMaterializeTransitionXCommand(job.getId(), hoursToSeconds(1)).call();
+
         final String startPlusOneHour = "2013-03-10T09:00Z";
         final String startPlusTwoHours = "2013-03-10T10:00Z";
-        final Date[] nominalTimes = new Date[] {DateUtils.parseDateOozieTZ(startInThePast),
+        final Date[] nominalTimesWithDSTChange = new Date[] {DateUtils.parseDateOozieTZ(startInThePast),
                 DateUtils.parseDateOozieTZ(startPlusOneHour),
                 DateUtils.parseDateOozieTZ(startPlusTwoHours)};
-        checkCoordActionsNominalTime(job.getId(), 3, nominalTimes);
+        checkCoordActionsNominalTime(job.getId(), 3, nominalTimesWithDSTChange);
 
         try {
             final JPAService jpaService = Services.get().get(JPAService.class);
@@ -401,7 +425,7 @@ public class TestCoordMaterializeTransitionXCommand extends XDataTestCase {
         }
     }
 
-    public void testCronFrequencyCatchupThrottleMoreThanDuration() throws Exception {
+    public void testCronFrequencyCatchupThrottleMoreThanDurationNoDSTChange() throws Exception {
         final String startInThePast = "2013-03-10T08:00Z";
         final Date startTime = DateUtils.parseDateOozieTZ(startInThePast);
         final String startPlusOneHourAndSome = "2013-03-10T09:01Z";
@@ -414,11 +438,12 @@ public class TestCoordMaterializeTransitionXCommand extends XDataTestCase {
         job.setTimeUnit(Timeunit.CRON);
         CoordJobQueryExecutor.getInstance().executeUpdate(CoordJobQuery.UPDATE_COORD_JOB, job);
 
-        new CoordMaterializeTransitionXCommand(job.getId(), 3600).call();
+        new CoordMaterializeTransitionXCommand(job.getId(), hoursToSeconds(1)).call();
+
         final String startPlusOneHour = "2013-03-10T09:00Z";
-        final Date[] nominalTimes = new Date[] {DateUtils.parseDateOozieTZ(startInThePast),
+        final Date[] nominalTimesWithoutDSTChange = new Date[] {DateUtils.parseDateOozieTZ(startInThePast),
                 DateUtils.parseDateOozieTZ(startPlusOneHour)};
-        checkCoordActionsNominalTime(job.getId(), 2, nominalTimes);
+        checkCoordActionsNominalTime(job.getId(), 2, nominalTimesWithoutDSTChange);
 
         try {
             final JPAService jpaService = Services.get().get(JPAService.class);
@@ -440,19 +465,21 @@ public class TestCoordMaterializeTransitionXCommand extends XDataTestCase {
         Date endTime = DateUtils.parseDateOozieTZ("2013-03-10T12:00Z");
         CoordinatorJobBean job = addRecordToCoordJobTable(CoordinatorJob.Status.RUNNING, startTime, endTime, null,
                 "0 * * * *");
-        new CoordMaterializeTransitionXCommand(job.getId(), 3600*4).call();
+        new CoordMaterializeTransitionXCommand(job.getId(), hoursToSeconds(4)).call();
         Date[] nominalTimes = new Date[] {DateUtils.parseDateOozieTZ("2013-03-10T08:00Z"),
                 DateUtils.parseDateOozieTZ("2013-03-10T09:00Z"),
                 DateUtils.parseDateOozieTZ("2013-03-10T10:00Z"),
-                DateUtils.parseDateOozieTZ("2013-03-10T11:00Z"),};
-        checkCoordActionsNominalTime(job.getId(), 4, nominalTimes);
+                DateUtils.parseDateOozieTZ("2013-03-10T11:00Z"),
+        };
+        final int expectedNominalTimeCount = 4;
+        checkCoordActionsNominalTime(job.getId(), expectedNominalTimeCount, nominalTimes);
 
         try {
             JPAService jpaService = Services.get().get(JPAService.class);
             job =  jpaService.execute(new CoordJobGetJPAExecutor(job.getId()));
             assertTrue(job.isDoneMaterialization());
-            assertEquals(job.getLastActionNumber(), 4);
-            assertEquals(job.getNextMaterializedTime(), DateUtils.parseDateOozieTZ("2013-03-10T12:00Z"));
+            assertEquals(expectedNominalTimeCount, job.getLastActionNumber());
+            assertEquals(DateUtils.parseDateOozieTZ("2013-03-10T12:00Z"), job.getNextMaterializedTime());
         }
         catch (JPAExecutorException se) {
             se.printStackTrace();
@@ -465,18 +492,20 @@ public class TestCoordMaterializeTransitionXCommand extends XDataTestCase {
         Date endTime = DateUtils.parseDateOozieTZ("2012-11-04T11:00Z");
         CoordinatorJobBean job = addRecordToCoordJobTable(CoordinatorJob.Status.RUNNING, startTime, endTime, null,
                 "0 * * * *");
-        new CoordMaterializeTransitionXCommand(job.getId(), 3600*4).call();
+        new CoordMaterializeTransitionXCommand(job.getId(), hoursToSeconds(4)).call();
         Date[] nominalTimes = new Date[] {DateUtils.parseDateOozieTZ("2012-11-04T07:00Z"),
                 DateUtils.parseDateOozieTZ("2012-11-04T08:00Z"),
                 DateUtils.parseDateOozieTZ("2012-11-04T09:00Z"),
-                DateUtils.parseDateOozieTZ("2012-11-04T10:00Z"),};
-        checkCoordActionsNominalTime(job.getId(), 4, nominalTimes);
+                DateUtils.parseDateOozieTZ("2012-11-04T10:00Z"),
+        };
+        final int expectedNominalTimeCount = 4;
+        checkCoordActionsNominalTime(job.getId(), expectedNominalTimeCount, nominalTimes);
 
         try {
             JPAService jpaService = Services.get().get(JPAService.class);
             job =  jpaService.execute(new CoordJobGetJPAExecutor(job.getId()));
             assertTrue(job.isDoneMaterialization());
-            assertEquals(job.getLastActionNumber(), 4);
+            assertEquals(job.getLastActionNumber(), expectedNominalTimeCount);
             assertEquals(job.getNextMaterializedTime(), DateUtils.parseDateOozieTZ("2012-11-04T11:00Z"));
         }
         catch (JPAExecutorException se) {
@@ -489,7 +518,7 @@ public class TestCoordMaterializeTransitionXCommand extends XDataTestCase {
         Date endTime = DateUtils.parseDateOozieTZ("2009-03-06T10:14Z");
         Date pauseTime = DateUtils.parseDateOozieTZ("2009-03-06T10:04Z");
         CoordinatorJobBean job = addRecordToCoordJobTable(CoordinatorJob.Status.RUNNING, startTime, endTime, pauseTime, "5");
-        new CoordMaterializeTransitionXCommand(job.getId(), 3600).call();
+        new CoordMaterializeTransitionXCommand(job.getId(), hoursToSeconds(1)).call();
         Date[] nominalTimes = new Date[] {DateUtils.parseDateOozieTZ("2009-03-06T10:00Z")};
         checkCoordActionsNominalTime(job.getId(), 1, nominalTimes);
     }
@@ -499,7 +528,7 @@ public class TestCoordMaterializeTransitionXCommand extends XDataTestCase {
         Date endTime = DateUtils.parseDateOozieTZ("2009-03-06T10:14Z");
         Date pauseTime = DateUtils.parseDateOozieTZ("2009-03-06T10:08Z");
         CoordinatorJobBean job = addRecordToCoordJobTable(CoordinatorJob.Status.RUNNING, startTime, endTime, pauseTime, "5");
-        new CoordMaterializeTransitionXCommand(job.getId(), 3600).call();
+        new CoordMaterializeTransitionXCommand(job.getId(), hoursToSeconds(1)).call();
         Date[] nominalTimes = new Date[] {DateUtils.parseDateOozieTZ("2009-03-06T10:00Z"),
                 DateUtils.parseDateOozieTZ("2009-03-06T10:05Z")};
         checkCoordActionsNominalTime(job.getId(), 2, nominalTimes);
@@ -515,10 +544,10 @@ public class TestCoordMaterializeTransitionXCommand extends XDataTestCase {
         Date endTime = DateUtils.parseDateOozieTZ("2009-03-06T10:14Z");
         Date pauseTime = DateUtils.parseDateOozieTZ("2009-03-06T09:58Z");
         final CoordinatorJobBean job = addRecordToCoordJobTable(CoordinatorJob.Status.RUNNING, startTime, endTime, pauseTime, "5");
-        new CoordMaterializeTransitionXCommand(job.getId(), 3600).call();
-        waitFor(1000*60, new Predicate() {
+        new CoordMaterializeTransitionXCommand(job.getId(), hoursToSeconds(1)).call();
+        waitFor(60_000, new Predicate() {
             public boolean evaluate() throws Exception {
-                return (getStatus(job.getId()) == CoordinatorJob.Status.PAUSED?true:false);
+                return (getStatus(job.getId()) == CoordinatorJob.Status.PAUSED);
             }
         });
         checkCoordActions(job.getId(), 0, CoordinatorJob.Status.PAUSED);
@@ -531,7 +560,8 @@ public class TestCoordMaterializeTransitionXCommand extends XDataTestCase {
         job.setFrequency("5");
         job.setTimeUnit(Timeunit.MINUTE);
         job.setMatThrottling(20);
-        String dryRunOutput = new CoordMaterializeTransitionXCommand(job, 3600, startTime, endTime).materializeActions(true);
+        String dryRunOutput = new CoordMaterializeTransitionXCommand(job, hoursToSeconds(1), startTime, endTime)
+                .materializeActions(true);
         String[] actions = dryRunOutput.split("action for new instance");
         assertEquals(3, actions.length -1);
         for(int i = 1; i < actions.length; i++) {
@@ -544,8 +574,8 @@ public class TestCoordMaterializeTransitionXCommand extends XDataTestCase {
         Date endTime = DateUtils.parseDateOozieTZ("2009-03-06T10:14Z");
         Date pauseTime = null;
         CoordinatorJobBean job = addRecordToCoordJobTable(CoordinatorJob.Status.RUNNING, startTime, endTime,
-                pauseTime, 300, "5");
-        new CoordMaterializeTransitionXCommand(job.getId(), 3600).call();
+                pauseTime, 300, "5", Timeunit.MINUTE);
+        new CoordMaterializeTransitionXCommand(job.getId(), hoursToSeconds(1)).call();
         checkCoordActionsTimeout(job.getId() + "@1", 300);
     }
 
@@ -553,7 +583,7 @@ public class TestCoordMaterializeTransitionXCommand extends XDataTestCase {
         Date startTime = DateUtils.parseDateOozieTZ("2009-02-01T01:00Z");
         Date endTime = DateUtils.parseDateOozieTZ("2009-02-03T23:59Z");
         CoordinatorJobBean job = addRecordToCoordJobTable(CoordinatorJob.Status.PREP, startTime, endTime, false, false, 0);
-        new CoordMaterializeTransitionXCommand(job.getId(), 3600).call();
+        new CoordMaterializeTransitionXCommand(job.getId(), hoursToSeconds(1)).call();
         checkCoordJobs(job.getId(), CoordinatorJob.Status.RUNNING);
     }
 
@@ -561,7 +591,7 @@ public class TestCoordMaterializeTransitionXCommand extends XDataTestCase {
         Date startTime = DateUtils.parseDateOozieTZ("2009-02-01T01:00Z");
         Date endTime = DateUtils.parseDateOozieTZ("2009-02-03T23:59Z");
         CoordinatorJobBean job = addRecordToCoordJobTable(CoordinatorJob.Status.PREP, startTime, endTime, false, false, 0);
-        new CoordMaterializeTransitionXCommand(job.getId(), 3600).call();
+        new CoordMaterializeTransitionXCommand(job.getId(), hoursToSeconds(1)).call();
         checkCoordWaiting(job.getId(), job.getMatThrottling());
     }
 
@@ -574,7 +604,7 @@ public class TestCoordMaterializeTransitionXCommand extends XDataTestCase {
         Date startTime = DateUtils.parseDateOozieTZ("2099-02-01T01:00Z");
         Date endTime = DateUtils.parseDateOozieTZ("2099-02-03T23:59Z");
         CoordinatorJobBean job = addRecordToCoordJobTable(CoordinatorJob.Status.PREP, startTime, endTime, false, false, 0);
-        new CoordMaterializeTransitionXCommand(job.getId(), 3600).call();
+        new CoordMaterializeTransitionXCommand(job.getId(), hoursToSeconds(1)).call();
         checkCoordJobs(job.getId(), CoordinatorJob.Status.PREP);
     }
 
@@ -587,7 +617,7 @@ public class TestCoordMaterializeTransitionXCommand extends XDataTestCase {
         Date startTime = DateUtils.toDate(new Timestamp(System.currentTimeMillis() + 180 * 1000));
         Date endTime = DateUtils.parseDateOozieTZ("2099-02-03T23:59Z");
         CoordinatorJobBean job = addRecordToCoordJobTable(CoordinatorJob.Status.PREP, startTime, endTime, false, false, 0);
-        new CoordMaterializeTransitionXCommand(job.getId(), 3600).call();
+        new CoordMaterializeTransitionXCommand(job.getId(), hoursToSeconds(1)).call();
         checkCoordJobs(job.getId(), CoordinatorJob.Status.RUNNING);
     }
 
@@ -610,7 +640,7 @@ public class TestCoordMaterializeTransitionXCommand extends XDataTestCase {
                 + "<workflow>" + "<app-path>hdfs:///tmp/workflows/</app-path>" + "</workflow>" + "</action>"
                 + "</coordinator-app>";
         CoordinatorJobBean job = addRecordToCoordJobTable(coordXml);
-        new CoordMaterializeTransitionXCommand(job.getId(), 3600).call();
+        new CoordMaterializeTransitionXCommand(job.getId(), hoursToSeconds(1)).call();
         JPAService jpaService = Services.get().get(JPAService.class);
         job = jpaService.execute(new CoordJobGetJPAExecutor(job.getId()));
         assertEquals(CoordinatorJob.Status.FAILED, job.getStatus());
@@ -629,7 +659,7 @@ public class TestCoordMaterializeTransitionXCommand extends XDataTestCase {
         Date startTime = DateUtils.toDate(new Timestamp(System.currentTimeMillis() + 360 * 1000));
         Date endTime = DateUtils.parseDateOozieTZ("2099-02-03T23:59Z");
         CoordinatorJobBean job = addRecordToCoordJobTable(CoordinatorJob.Status.PREP, startTime, endTime, false, false, 0);
-        new CoordMaterializeTransitionXCommand(job.getId(), 3600).call();
+        new CoordMaterializeTransitionXCommand(job.getId(), hoursToSeconds(1)).call();
         checkCoordJobs(job.getId(), CoordinatorJob.Status.PREP);
     }
 
@@ -638,7 +668,7 @@ public class TestCoordMaterializeTransitionXCommand extends XDataTestCase {
      *
      * @throws Exception
      */
-    public void testMaterizationLookup() throws Exception {
+    public void testMaterializationLookup() throws Exception {
         long TIME_IN_MIN = 60 * 1000;
         long TIME_IN_HOURS = TIME_IN_MIN * 60;
         long TIME_IN_DAY = TIME_IN_HOURS * 24;
@@ -653,7 +683,7 @@ public class TestCoordMaterializeTransitionXCommand extends XDataTestCase {
         job.setFrequency("1");
         job.setTimeUnitStr("DAY");
         CoordJobQueryExecutor.getInstance().executeUpdate(CoordJobQuery.UPDATE_COORD_JOB, job);
-        new CoordMaterializeTransitionXCommand(job.getId(), 3600).call();
+        new CoordMaterializeTransitionXCommand(job.getId(), hoursToSeconds(1)).call();
         job = jpaService.execute(new CoordJobGetJPAExecutor(job.getId()));
         assertEquals(new Date(startTime.getTime() + TIME_IN_DAY * 3), job.getNextMaterializedTime());
 
@@ -666,7 +696,7 @@ public class TestCoordMaterializeTransitionXCommand extends XDataTestCase {
         job.setFrequency("1");
         job.setTimeUnitStr("HOUR");
         CoordJobQueryExecutor.getInstance().executeUpdate(CoordJobQuery.UPDATE_COORD_JOB, job);
-        new CoordMaterializeTransitionXCommand(job.getId(), 3600).call();
+        new CoordMaterializeTransitionXCommand(job.getId(), hoursToSeconds(1)).call();
         job = jpaService.execute(new CoordJobGetJPAExecutor(job.getId()));
         assertEquals(new Date(startTime.getTime() + TIME_IN_HOURS * 10), job.getNextMaterializedTime());
 
@@ -679,13 +709,13 @@ public class TestCoordMaterializeTransitionXCommand extends XDataTestCase {
         job.setFrequency("1");
         job.setTimeUnitStr("DAY");
         CoordJobQueryExecutor.getInstance().executeUpdate(CoordJobQuery.UPDATE_COORD_JOB, job);
-        new CoordMaterializeTransitionXCommand(job.getId(), 3600).call();
+        new CoordMaterializeTransitionXCommand(job.getId(), hoursToSeconds(1)).call();
         job = jpaService.execute(new CoordJobGetJPAExecutor(job.getId()));
         // If the startTime and endTime straddle a DST shift (the Coord is in "America/Los_Angeles"), then we need to adjust for
         // that because startTime and endTime assume GMT
         Date next = new Date(startTime.getTime() + TIME_IN_DAY * 3);
         TimeZone tz = TimeZone.getTimeZone(job.getTimeZone());
-        next.setTime(next.getTime() - getDSTOffset(tz, startTime, next));
+        next.setTime(next.getTime() + DaylightOffsetCalculator.getDSTOffset(tz, startTime, next));
         assertEquals(next, job.getNextMaterializedTime());
 
         // test with hours, time should not pass the current time.
@@ -697,13 +727,13 @@ public class TestCoordMaterializeTransitionXCommand extends XDataTestCase {
         job.setFrequency("1");
         job.setTimeUnitStr("DAY");
         CoordJobQueryExecutor.getInstance().executeUpdate(CoordJobQuery.UPDATE_COORD_JOB, job);
-        new CoordMaterializeTransitionXCommand(job.getId(), 3600).call();
+        new CoordMaterializeTransitionXCommand(job.getId(), hoursToSeconds(1)).call();
         job = jpaService.execute(new CoordJobGetJPAExecutor(job.getId()));
         // If the startTime and endTime straddle a DST shift (the Coord is in "America/Los_Angeles"), then we need to adjust for
         // that because startTime and endTime assume GMT
         next = new Date(startTime.getTime() + TIME_IN_DAY);
         tz = TimeZone.getTimeZone(job.getTimeZone());
-        next.setTime(next.getTime() - getDSTOffset(tz, startTime, next));
+        next.setTime(next.getTime() + DaylightOffsetCalculator.getDSTOffset(tz, startTime, next));
         assertEquals(next, job.getNextMaterializedTime());
 
         // for current job in min, should not exceed hour windows
@@ -714,13 +744,13 @@ public class TestCoordMaterializeTransitionXCommand extends XDataTestCase {
         job.setFrequency("5");
         job.setTimeUnitStr("MINUTE");
         CoordJobQueryExecutor.getInstance().executeUpdate(CoordJobQuery.UPDATE_COORD_JOB, job);
-        new CoordMaterializeTransitionXCommand(job.getId(), 3600).call();
+        new CoordMaterializeTransitionXCommand(job.getId(), hoursToSeconds(1)).call();
         job = jpaService.execute(new CoordJobGetJPAExecutor(job.getId()));
         // If the startTime and endTime straddle a DST shift (the Coord is in "America/Los_Angeles"), then we need to adjust for
         // that because startTime and endTime assume GMT
         next = new Date(startTime.getTime() + TIME_IN_HOURS);
         tz = TimeZone.getTimeZone(job.getTimeZone());
-        next.setTime(next.getTime() - getDSTOffset(tz, startTime, next));
+        next.setTime(next.getTime() + DaylightOffsetCalculator.getDSTOffset(tz, startTime, next));
         assertEquals(next, job.getNextMaterializedTime());
 
         // for current job in hour, should not exceed hour windows
@@ -731,27 +761,313 @@ public class TestCoordMaterializeTransitionXCommand extends XDataTestCase {
         job.setFrequency("1");
         job.setTimeUnitStr("DAY");
         CoordJobQueryExecutor.getInstance().executeUpdate(CoordJobQuery.UPDATE_COORD_JOB, job);
-        new CoordMaterializeTransitionXCommand(job.getId(), 3600).call();
+        new CoordMaterializeTransitionXCommand(job.getId(), hoursToSeconds(1)).call();
         job = jpaService.execute(new CoordJobGetJPAExecutor(job.getId()));
         // If the startTime and endTime straddle a DST shift (the Coord is in "America/Los_Angeles"), then we need to adjust for
         // that because startTime and endTime assume GMT
         next = new Date(startTime.getTime() + TIME_IN_DAY);
         tz = TimeZone.getTimeZone(job.getTimeZone());
-        next.setTime(next.getTime() - getDSTOffset(tz, startTime, next));
+        next.setTime(next.getTime() + DaylightOffsetCalculator.getDSTOffset(tz, startTime, next));
         assertEquals(next, job.getNextMaterializedTime());
 
+    }
+
+    Calendar getDaylightCalendar() {
+        final Calendar daylight = Calendar.getInstance();
+        daylight.set(2012, 10, 2, 15, 28, 00);
+
+        return daylight;
+    }
+
+    Calendar getStandardCalendar() {
+        final Calendar standard = Calendar.getInstance();
+        standard.set(2013, 2, 9, 15, 28, 00);
+
+        return standard;
+    }
+
+    public void testWhenChangingDSTCronAndELMonthlyFrequenciesEqual() throws Exception {
+        String dstAwareMonthlyCron = "10 23 1 1-12 *";
+        Date startTime = DateUtils.parseDateOozieTZ("2016-03-01T23:10Z");
+        Date endTime = DateUtils.parseDateOozieTZ("2016-12-03T00:00Z");;
+        Date[] nominalTimesWithTwoDstChange = new Date[]{
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-03-01T15:10")),
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-04-01T15:10")),  // DST started
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-05-01T15:10")),
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-06-01T15:10")),
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-07-01T15:10")),
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-08-01T15:10")),
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-09-01T15:10")),
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-10-01T15:10")),
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-11-01T15:10")),
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-12-01T15:10")),  // DST ended
+        };
+        testELAndCronNominalTimesEqual(startTime, endTime, nominalTimesWithTwoDstChange, dstAwareMonthlyCron, "1", Timeunit.MONTH);
+    }
+
+    public void testWhenChangingDSTCronAndELDailyFrequenciesEqual() throws Exception {
+        String dstAwareDailyCron = "10 23 * * *";
+        Date startTime = DateUtils.parseDateOozieTZ("2016-03-11T23:10Z");
+        Date endTime = DateUtils.parseDateOozieTZ("2016-03-15T02:00Z");
+        Date[] nominalTimesWithTwoDstChange = new Date[]{
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-03-11T15:10")),
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-03-12T15:10")),
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-03-13T15:10")), // DST started
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-03-14T15:10")),
+        };
+        testELAndCronNominalTimesEqual(startTime, endTime, nominalTimesWithTwoDstChange, dstAwareDailyCron, "1", Timeunit.DAY);
+    }
+
+    public void testWhenChangingDSTELEveryTwentyFourthHour() throws Exception {
+        Date startTime = DateUtils.parseDateOozieTZ("2016-03-11T23:10Z");
+        Date endTime = DateUtils.parseDateOozieTZ("2016-03-15T02:00Z");
+        Date[] nominalTimesWithTwoDstChange = new Date[]{
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-03-11T15:10")),
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-03-12T15:10")),
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-03-13T16:10")), // DST started
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-03-14T16:10")),
+        };
+        testELNominalTimes(startTime, endTime, nominalTimesWithTwoDstChange,"24", Timeunit.HOUR);
+    }
+
+    public void testWhenBeginningDSTCronAndELHourlyFrequenciesEqual() throws Exception {
+        Date startTime = DateUtils.parseDateOozieTZ("2017-03-12T07:10Z");
+        Date endTime = DateUtils.parseDateOozieTZ("2017-03-12T12:30Z");
+        String everyHourAtTen = "10 * * * *";
+        Date[] nominalTimesWithOneDstChange = new Date[]{
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2017-03-11T23:10")),
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2017-03-12T00:10")),
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2017-03-12T01:10")),
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2017-03-12T03:10")), // DST started
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2017-03-12T04:10")),
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2017-03-12T05:10")),
+        };
+
+        testELAndCronNominalTimesEqual(startTime, endTime, nominalTimesWithOneDstChange, everyHourAtTen, "1", Timeunit.HOUR);
+    }
+
+    public void testWhenEndingDSTCronAndELHourlyFrequenciesEqual() throws Exception {
+        Date startTime = DateUtils.parseDateOozieTZ("2017-11-05T07:10Z");
+        Date endTime = DateUtils.parseDateOozieTZ("2017-11-05T10:30Z");
+        String everyHourAtTen = "10 * * * *";
+        Date[] nominalTimesWithOneDstChange = new Date[]{
+                DateUtils.parseDateOozieTZ("2017-11-05T07:10Z"), // LA time: 2017-11-05T00:10
+                DateUtils.parseDateOozieTZ("2017-11-05T08:10Z"), // LA time: 2017-11-05T01:10
+                DateUtils.parseDateOozieTZ("2017-11-05T09:10Z"), // LA time: 2017-11-05T01:10, DST ended
+                DateUtils.parseDateOozieTZ("2017-11-05T10:10Z"), // LA time: 2017-11-05T02:10
+        };
+
+        testELAndCronNominalTimesEqual(startTime, endTime, nominalTimesWithOneDstChange, everyHourAtTen, "1", Timeunit.HOUR);
+    }
+
+    public void testWhenChangingDSTELEveryTwentiethDay() throws Exception {
+        Date startTime = DateUtils.parseDateOozieTZ("2016-02-01T13:10Z");
+        Date endTime = DateUtils.parseDateOozieTZ("2016-12-03T00:00Z");
+        Date[] nominalTimesWithTwoDstChange = new Date[]{
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-02-01T05:10")),
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-02-21T05:10")),
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-03-12T05:10")),
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-04-01T05:10")), // DST started
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-04-21T05:10")),
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-05-11T05:10")),
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-05-31T05:10")),
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-06-20T05:10")),
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-07-10T05:10")),
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-07-30T05:10")),
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-08-19T05:10")),
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-09-08T05:10")),
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-09-28T05:10")),
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-10-18T05:10")),
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-11-07T05:10")), // DST ended
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-11-27T05:10")),
+        };
+
+        testELNominalTimes(startTime, endTime, nominalTimesWithTwoDstChange,"20", Timeunit.DAY);
+    }
+
+    public void testWhenChangingDSTCronEveryTwentiethDay() throws Exception {
+        Date startTime = DateUtils.parseDateOozieTZ("2016-02-01T13:10Z");
+        Date endTime = DateUtils.parseDateOozieTZ("2016-12-03T00:00Z");
+        String everyTwentiethDayAroundDstShift = "10 13 */20 2-3,11,12 *";
+
+        Date[] nominalTimesWithTwoDstChange = new Date[]{
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-02-01T05:10")),
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-02-21T05:10")),
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-03-01T05:10")),
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-03-21T05:10")), // DST started
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-11-01T05:10")),
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-11-21T05:10")), // DST ended
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-12-01T05:10")),
+        };
+        testCronNominalTimes(startTime, endTime, nominalTimesWithTwoDstChange, everyTwentiethDayAroundDstShift);
+    }
+
+    public void testWhenChangingDSTCronAndELEveryThirdMonthFrequenciesEqual() throws Exception {
+        Date startTime = DateUtils.parseDateOozieTZ("2016-01-01T13:10Z");
+        Date endTime = DateUtils.parseDateOozieTZ("2017-12-03T00:00Z");
+        String everyThirdMonth = "10 13 1 */3 *";
+
+        Date[] nominalTimesWithTwoDstChange = new Date[]{
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-01-01T05:10")),
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-04-01T05:10")), // DST started on 13th March
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-07-01T05:10")),
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-10-01T05:10")),
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2017-01-01T05:10")), // DST ended on 6th of November
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2017-04-01T05:10")), // DST started again on 12th March
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2017-07-01T05:10")),
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2017-10-01T05:10")),
+        };
+        testELAndCronNominalTimesEqual(startTime, endTime, nominalTimesWithTwoDstChange, everyThirdMonth, "3", Timeunit.MONTH);
+    }
+
+    public void testWhenDSTStartsCronFrequencyEveryTwentiethHour() throws Exception {
+        Date startTime = DateUtils.parseDateOozieTZ("2016-01-01T13:10Z");
+        Date endTime = DateUtils.parseDateOozieTZ("2016-12-03T00:00Z");
+        String everyTwentiethHourNearDSTShift = "10 */20 12-14 3 *";
+        Date[] nominalTimesWithTwoDstChange = new Date[]{
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-03-11T16:10")),
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-03-12T12:10")),
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-03-12T16:10")),
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-03-13T13:10")), // DST change
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-03-13T17:10")),
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-03-14T13:10")),
+        };
+        testCronNominalTimes(startTime, endTime, nominalTimesWithTwoDstChange, everyTwentiethHourNearDSTShift);
+    }
+
+    public void testWhenDSTStartsELFrequencyEveryTwentiethHour() throws Exception {
+        Date startTime = DateUtils.parseDateOozieTZ("2016-03-12T13:10Z");
+        Date endTime = DateUtils.parseDateOozieTZ("2016-03-16T00:00Z");
+        Date[] nominalTimesWithTwoDstChange = new Date[]{
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-03-12T05:10")),
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-03-13T01:10")),
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-03-13T22:10")), // DST started
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-03-14T18:10")),
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-03-15T14:10")),
+        };
+
+        testELNominalTimes(startTime, endTime, nominalTimesWithTwoDstChange, "20", Timeunit.HOUR);
+    }
+
+    public void testWhenDSTSEndsCronFrequencyEveryTwentiethHour() throws Exception {
+        Date startTime = DateUtils.parseDateOozieTZ("2016-01-01T13:10Z");
+        Date endTime = DateUtils.parseDateOozieTZ("2016-12-03T00:00Z");
+        String everyTwentiethHourNearDSTShift = "10 */20 5-7 11 *";
+        Date[] nominalTimesWithTwoDstChange = new Date[]{
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-11-04T16:10")),
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-11-05T13:10")),
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-11-05T17:10")),
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-11-06T12:10")), // DST change
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-11-06T16:10")),
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-11-07T12:10")),
+        };
+
+        testCronNominalTimes(startTime, endTime, nominalTimesWithTwoDstChange, everyTwentiethHourNearDSTShift);
+    }
+
+    public void testWhenDSTEndsELFrequencyEveryTwentiethHour() throws Exception {
+        Date startTime = DateUtils.parseDateOozieTZ("2016-11-04T23:10Z");
+        Date endTime = DateUtils.parseDateOozieTZ("2016-11-08T22:00Z");
+        Date[] nominalTimesWithTwoDstChange = new Date[]{
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-11-04T16:10")),
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-11-05T12:10")),
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-11-06T07:10")), // DST ended
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-11-07T03:10")),
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-11-07T23:10")),
+        };
+
+        testELNominalTimes(startTime, endTime, nominalTimesWithTwoDstChange, "20", Timeunit.HOUR);
+    }
+
+    public void testWhenDSTSwitchELAndCronFrequencyEveryThirtiethMinute() throws Exception {
+        Date startTime = DateUtils.parseDateOozieTZ("2016-03-13T08:00Z");
+        Date endTime = DateUtils.parseDateOozieTZ("2016-03-13T13:00Z");
+        String everyThirtiethMinuteCron = "*/30 * * * *";
+        Date[] nominalTimesWithTwoDstChange = new Date[]{
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-03-13T00:00")),
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-03-13T00:30")),
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-03-13T01:00")),
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-03-13T01:30")),
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-03-13T02:00")), // DST change
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-03-13T02:30")),
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-03-13T04:00")),
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-03-13T04:30")),
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-03-13T05:00")),
+                DateUtils.parseDateOozieTZ(convertLATimeToUTC("2016-03-13T05:30")),
+        };
+
+        testELAndCronNominalTimesEqual(startTime, endTime, nominalTimesWithTwoDstChange,everyThirtiethMinuteCron,
+                "30", Timeunit.MINUTE);
+    }
+
+    private String convertLATimeToUTC (String localTime) throws Exception {
+        DateFormat LATimeFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm");
+        LATimeFormat.setTimeZone(TimeZone.getTimeZone("America/Los_Angeles"));
+        Date date = LATimeFormat.parse(localTime);
+
+        DateFormat utcFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'");
+        utcFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+
+        return utcFormat.format(date);
+
+    }
+
+    private void testELAndCronNominalTimesEqual (Date startTime, Date endTime, Date[] nominalTimes, String cronFrequency,
+                                                 String elFrequency, Timeunit elTimeUnit) throws Exception {
+        CoordinatorJobBean elJob = addRecordToCoordJobTable(CoordinatorJob.Status.RUNNING, startTime, endTime, null,
+                elFrequency, elTimeUnit);
+        CoordinatorJobBean cronJob = addRecordToCoordJobTable(CoordinatorJob.Status.RUNNING, startTime, endTime, null,
+                cronFrequency);
+
+        new CoordMaterializeTransitionXCommand(elJob.getId(), oneHourInSeconds).call();
+        new CoordMaterializeTransitionXCommand(cronJob.getId(), oneHourInSeconds).call();
+
+
+        JPAService jpaService = Services.get().get(JPAService.class);
+
+        elJob = jpaService.execute(new CoordJobGetJPAExecutor(elJob.getId()));
+        cronJob = jpaService.execute(new CoordJobGetJPAExecutor(cronJob.getId()));
+
+        checkCoordActionsNominalTime(cronJob.getId(), nominalTimes.length, nominalTimes);
+        checkCoordActionsNominalTime(elJob.getId(), nominalTimes.length, nominalTimes);
+
+        assertTrue("Cron and EL job materialization should both be complete",
+                elJob.isDoneMaterialization() && cronJob.isDoneMaterialization());
+    }
+
+    private void testCronNominalTimes (Date startTime, Date endTime, Date[] nominalTimes, String cronFrequency) throws Exception {
+        CoordinatorJobBean cronJob = addRecordToCoordJobTable(CoordinatorJob.Status.RUNNING, startTime, endTime, null,
+                cronFrequency);
+        new CoordMaterializeTransitionXCommand(cronJob.getId(), oneHourInSeconds).call();
+
+        JPAService jpaService = Services.get().get(JPAService.class);
+        cronJob = jpaService.execute(new CoordJobGetJPAExecutor(cronJob.getId()));
+        checkCoordActionsNominalTime(cronJob.getId(), nominalTimes.length, nominalTimes);
+        assertTrue("Cron job materialization should be complete", cronJob.isDoneMaterialization());
+    }
+
+    private void testELNominalTimes (Date startTime, Date endTime, Date[] nominalTimes, String elFrequency, Timeunit elTimeUnit)
+            throws Exception {
+        CoordinatorJobBean elJob = addRecordToCoordJobTable(CoordinatorJob.Status.RUNNING, startTime, endTime, null,
+                elFrequency, elTimeUnit);
+        new CoordMaterializeTransitionXCommand(elJob.getId(), oneHourInSeconds).call();
+
+        JPAService jpaService = Services.get().get(JPAService.class);
+        elJob = jpaService.execute(new CoordJobGetJPAExecutor(elJob.getId()));
+        checkCoordActionsNominalTime(elJob.getId(), nominalTimes.length, nominalTimes);
+        assertTrue("EL job materialization should be complete", elJob.isDoneMaterialization());
     }
 
     public void testLastOnlyMaterialization() throws Exception {
 
         long now = System.currentTimeMillis();
-        Date startTime = DateUtils.toDate(new Timestamp(now - 180 * 60 * 1000));    // 3 hours ago
-        Date endTime = DateUtils.toDate(new Timestamp(now + 180 * 60 * 1000));      // 3 hours from now
+        Date startTime = DateUtils.toDate(new Timestamp(now - 180 * 60 * 1000));    // 3 secondsFromHours ago
+        Date endTime = DateUtils.toDate(new Timestamp(now + 180 * 60 * 1000));      // 3 secondsFromHours from now
         CoordinatorJobBean job = addRecordToCoordJobTable(CoordinatorJob.Status.RUNNING, startTime, endTime, null, -1, "10",
                 CoordinatorJob.Execution.LAST_ONLY);
         // This would normally materialize the throttle amount and within a 1 hour window; however, with LAST_ONLY this should
         // ignore those parameters and materialize everything in the past
-        new CoordMaterializeTransitionXCommand(job.getId(), 3600).call();
+        new CoordMaterializeTransitionXCommand(job.getId(), hoursToSeconds(1)).call();
         checkCoordJobs(job.getId(), CoordinatorJob.Status.RUNNING);
         CoordinatorActionBean.Status[] expectedStatuses = new CoordinatorActionBean.Status[19];
         Arrays.fill(expectedStatuses, CoordinatorActionBean.Status.WAITING);
@@ -761,7 +1077,7 @@ public class TestCoordMaterializeTransitionXCommand extends XDataTestCase {
         job = addRecordToCoordJobTable(CoordinatorJob.Status.RUNNING, startTime, endTime, null, -1, "10",
                 CoordinatorJob.Execution.LAST_ONLY);
         // We're starting from "now" this time (i.e. present/future), so it should materialize things normally
-        new CoordMaterializeTransitionXCommand(job.getId(), 3600).call();
+        new CoordMaterializeTransitionXCommand(job.getId(), hoursToSeconds(1)).call();
         checkCoordJobs(job.getId(), CoordinatorJob.Status.RUNNING);
         expectedStatuses = new CoordinatorActionBean.Status[6];
         Arrays.fill(expectedStatuses, CoordinatorActionBean.Status.WAITING);
@@ -771,15 +1087,15 @@ public class TestCoordMaterializeTransitionXCommand extends XDataTestCase {
     public void testCurrentTimeCheck() throws Exception {
         long now = System.currentTimeMillis();
         Date startTime = DateUtils.toDate(new Timestamp(now)); // now
-        Date endTime = DateUtils.toDate(new Timestamp(now + 3 * 60 * 60 * 1000)); // 3 hours from now
+        Date endTime = DateUtils.toDate(new Timestamp(now + 3 * 60 * 60 * 1000)); // 3 secondsFromHours from now
         CoordinatorJobBean job = addRecordToCoordJobTable(CoordinatorJob.Status.RUNNING, startTime, endTime, null, "5",
                 20);
-        new CoordMaterializeTransitionXCommand(job.getId(), 3600).call();
+        new CoordMaterializeTransitionXCommand(job.getId(), hoursToSeconds(1)).call();
         checkCoordJobs(job.getId(), CoordinatorJob.Status.RUNNING);
 
         job = CoordJobQueryExecutor.getInstance().get(CoordJobQuery.GET_COORD_JOB, job.getId());
         assertEquals(job.getLastActionNumber(), 12);
-        new CoordMaterializeTransitionXCommand(job.getId(), 3600).call();
+        new CoordMaterializeTransitionXCommand(job.getId(), hoursToSeconds(1)).call();
         // unfortunatily XCommand doesn't throw exception on precondition
         // assertEquals(e.getErrorCode(), ErrorCode.E1100);
         // assertTrue(e.getMessage().contains("Request is for future time. Lookup time is"));
@@ -833,7 +1149,7 @@ public class TestCoordMaterializeTransitionXCommand extends XDataTestCase {
         job.setEndTime(endTime);
         job.setMatThrottling(10);
         CoordJobQueryExecutor.getInstance().executeUpdate(CoordJobQuery.UPDATE_COORD_JOB, job);
-        new CoordMaterializeTransitionXCommand(job.getId(), 3600).call();
+        new CoordMaterializeTransitionXCommand(job.getId(), hoursToSeconds(1)).call();
         job = CoordJobQueryExecutor.getInstance().get(CoordJobQuery.GET_COORD_JOB, job.getId());
         assertEquals(job.getLastActionNumber(), 3);
 
@@ -880,7 +1196,7 @@ public class TestCoordMaterializeTransitionXCommand extends XDataTestCase {
 
         job.setMatThrottling(10);
         CoordJobQueryExecutor.getInstance().executeUpdate(CoordJobQuery.UPDATE_COORD_JOB, job);
-        new CoordMaterializeTransitionXCommand(job.getId(), 3600).call();
+        new CoordMaterializeTransitionXCommand(job.getId(), hoursToSeconds(1)).call();
         job = CoordJobQueryExecutor.getInstance().get(CoordJobQuery.GET_COORD_JOB, job.getId());
         assertEquals(4, job.getLastActionNumber());
 
@@ -899,35 +1215,39 @@ public class TestCoordMaterializeTransitionXCommand extends XDataTestCase {
 
     protected CoordinatorJobBean addRecordToCoordJobTable(CoordinatorJob.Status status, Date startTime, Date endTime,
             Date pauseTime, String freq) throws Exception {
-        return addRecordToCoordJobTable(status, startTime, endTime, pauseTime, -1, freq);
+        return addRecordToCoordJobTable(status, startTime, endTime, pauseTime, -1, freq, Timeunit.MINUTE);
+    }
+    protected CoordinatorJobBean addRecordToCoordJobTable(CoordinatorJob.Status status, Date startTime, Date endTime,
+                                                          Date pauseTime, String freq, Timeunit timeUnit) throws Exception {
+        return addRecordToCoordJobTable(status, startTime, endTime, pauseTime, -1, freq, timeUnit);
     }
 
     protected CoordinatorJobBean addRecordToCoordJobTable(CoordinatorJob.Status status, Date startTime, Date endTime,
             Date pauseTime, String freq, int matThrottling) throws Exception {
-        return addRecordToCoordJobTable(status, startTime, endTime, pauseTime, -1, freq, CoordinatorJob.Execution.FIFO,
-                matThrottling);
+        return addRecordToCoordJobTable(status, startTime, endTime, pauseTime, -1, freq, Timeunit.MINUTE,
+                CoordinatorJob.Execution.FIFO, matThrottling);
     }
 
     protected CoordinatorJobBean addRecordToCoordJobTable(CoordinatorJob.Status status, Date startTime, Date endTime,
-            Date pauseTime, int timeout, String freq) throws Exception {
-        return addRecordToCoordJobTable(status, startTime, endTime, pauseTime, timeout, freq,
+            Date pauseTime, int timeout, String freq, Timeunit timeUnit) throws Exception {
+        return addRecordToCoordJobTable(status, startTime, endTime, pauseTime, timeout, freq, timeUnit,
                 CoordinatorJob.Execution.FIFO, 20);
     }
 
     protected CoordinatorJobBean addRecordToCoordJobTable(CoordinatorJob.Status status, Date startTime, Date endTime,
             Date pauseTime, int timeout, String freq, CoordinatorJob.Execution execution) throws Exception {
-        return addRecordToCoordJobTable(status, startTime, endTime, pauseTime, timeout, freq, execution, 20);
+        return addRecordToCoordJobTable(status, startTime, endTime, pauseTime, timeout, freq, Timeunit.MINUTE, execution, 20);
     }
 
     protected CoordinatorJobBean addRecordToCoordJobTable(CoordinatorJob.Status status, Date startTime, Date endTime,
-            Date pauseTime, int timeout, String freq, CoordinatorJob.Execution execution, int matThrottling)
+            Date pauseTime, int timeout, String freq, Timeunit timeUnit, CoordinatorJob.Execution execution, int matThrottling)
             throws Exception {
         CoordinatorJobBean coordJob = createCoordJob(status, startTime, endTime, false, false, 0);
         coordJob.setStartTime(startTime);
         coordJob.setEndTime(endTime);
         coordJob.setPauseTime(pauseTime);
         coordJob.setFrequency(freq);
-        coordJob.setTimeUnit(Timeunit.MINUTE);
+        coordJob.setTimeUnit(timeUnit);
         coordJob.setTimeout(timeout);
         coordJob.setConcurrency(3);
         coordJob.setMatThrottling(matThrottling);
@@ -1081,20 +1401,6 @@ public class TestCoordMaterializeTransitionXCommand extends XDataTestCase {
             se.printStackTrace();
             fail("Action ID " + actionId + " was not stored properly in db");
         }
-    }
-
-    private long getDSTOffset(TimeZone tz, Date d1, Date d2) {
-        if (tz.inDaylightTime(d1) && !tz.inDaylightTime(d2)) {
-            Calendar cal = Calendar.getInstance(tz);
-            cal.setTime(d1);
-            return cal.get(Calendar.DST_OFFSET);
-        }
-        if (!tz.inDaylightTime(d1) && tz.inDaylightTime(d2)) {
-            Calendar cal = Calendar.getInstance(tz);
-            cal.setTime(d2);
-            return cal.get(Calendar.DST_OFFSET);
-        }
-        return 0;
     }
 
     /**
