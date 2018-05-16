@@ -165,7 +165,7 @@ public class TestHiveActionExecutor extends ActionExecutorTestCase {
             Context context = createContext(getActionScriptXml());
             Namespace ns = Namespace.getNamespace("uri:oozie:hive-action:0.2");
             final String launcherId = submitAction(context, ns);
-            waitUntilYarnAppDoneAndAssertSuccess(launcherId);
+            waitUntilYarnAppDoneAndAssertSuccess(launcherId, 180 * 1000);
             Configuration conf = new XConfiguration();
             conf.set("user.name", getTestUser());
             Map<String, String> actionData = LauncherHelper.getActionData(getFileSystem(), context.getActionDir(),
