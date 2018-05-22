@@ -38,7 +38,7 @@
     </properties>
 
     <dependencies>
-        
+
         <dependency>
             <artifactId>derby</artifactId>
             <groupId>org.apache.derby</groupId>
@@ -455,7 +455,7 @@
                                     <type>zip</type>
                                     <overWrite>true</overWrite>
                                     <outputDirectory>${project.build.directory}/partial-sharelib/share/lib/spark</outputDirectory>
-                                    <destFileName>py4j-0.9-src.zip</destFileName>   <!-- PySpark needs it to be named this -->
+                                    <destFileName>py4j-0.10.7-src.zip</destFileName>   <!-- PySpark needs it to be named this -->
                                 </artifactItem>
                             </artifactItems>
                         </configuration>
@@ -669,4 +669,3 @@
         </profile>
     </profiles>
 </project>
-
