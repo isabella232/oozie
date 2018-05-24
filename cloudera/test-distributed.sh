@@ -1,11 +1,6 @@
 #!/bin/bash
 set -xe
 
-## copied from http://github.mtv.cloudera.com/Kitchen/jenkins-master/blob/master/dsl/master-02/pre_commit/oozie_gerrit.groovy
-export DIST_TEST_USER="hadoop-jobs"
-export DIST_TEST_PASSWORD="zah0ti8O"
-##
-
 # From jenkins
 export JAVA8_HOME=$JAVA_1_8_HOME
 
