@@ -10,4 +10,4 @@ export CDH_GBN=$(curl "http://builddb.infra.cloudera.com:8080/resolvealias?alias
 env
 curl http://github.mtv.cloudera.com/raw/CDH/cdh/${branchName}/gbn-m2-settings.xml > mvn_settings.xml
 JAVA8_BUILD=true
-mvn clean test -s mvn_settings.xml -B -Dmaven.test.failure.ignore=true -fae -Doozie.test.waitfor.ratio=2 -Dtest.timeout=10800 -Dmaven.test.java.opts="-Xmx2048m -da"
+mvn clean test -s mvn_settings.xml -B -fae -Doozie.test.waitfor.ratio=2 -Dtest.timeout=10800 -Dmaven.test.java.opts="-Xmx2048m -da"
