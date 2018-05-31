@@ -1,6 +1,7 @@
 -- Oozie 5.1.0 release (trunk - unreleased)
 
 OOZIE-3370 Property filtering is not consistent across job submission (andras.piros)
+OOZIE-3269 Flaky tests in TestCoordMaterializeTriggerService class (pbacsko via andras.piros)
 OOZIE-3257 TestHiveActionExecutor#testHiveAction still fails (pbacsko via andras.piros)
 OOZIE-2967 TestStatusTransitService.testBundleStatusCoordSubmitFails fails intermittently in Apache Oozie Core 5.0.0-SNAPSHOT (pbacsko)
 OOZIE-3235 Upgrade ActiveMQ to 5.15.3 (matijhs via andras.piros)
