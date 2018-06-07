@@ -407,17 +407,23 @@ public class TestCoordMaterializeTransitionXCommand extends XDataTestCase {
         final String startPlusTwoHours = "2013-03-10T10:00Z";
         final Date[] nominalTimesWithDSTChange = new Date[] {DateUtils.parseDateOozieTZ(startInThePast),
                 DateUtils.parseDateOozieTZ(startPlusOneHour),
-                DateUtils.parseDateOozieTZ(startPlusTwoHours)};
-        checkCoordActionsNominalTime(job.getId(), 3, nominalTimesWithDSTChange);
+                DateUtils.parseDateOozieTZ(startPlusTwoHours)
+        };
+        final int expectedNominalTimeCount = 3;
+        checkCoordActionsNominalTime(job.getId(), expectedNominalTimeCount, nominalTimesWithDSTChange);
 
+        checkTwoActionsAfterCatchup(job, expectedNominalTimeCount, "2013-03-10T11:00Z");
+    }
+
+    private void checkTwoActionsAfterCatchup(CoordinatorJobBean job, int expectedJobCount, String nextMaterialization)
+            throws ParseException {
         try {
             final JPAService jpaService = Services.get().get(JPAService.class);
             job =  jpaService.execute(new CoordJobGetJPAExecutor(job.getId()));
             assertTrue("coordinator job should have already been materialized", job.isDoneMaterialization());
-            assertEquals("coordinator action count mismatch", 3, job.getLastActionNumber());
-            final String startPlusThreeHours = "2013-03-10T11:00Z";
+            assertEquals("coordinator action count mismatch", expectedJobCount, job.getLastActionNumber());
             assertEquals("coordinator next materialization time mismatch",
-                    DateUtils.parseDateOozieTZ(startPlusThreeHours), job.getNextMaterializedTime());
+                    DateUtils.parseDateOozieTZ(nextMaterialization), job.getNextMaterializedTime());
         }
         catch (final JPAExecutorException se) {
             se.printStackTrace();
@@ -443,21 +449,10 @@ public class TestCoordMaterializeTransitionXCommand extends XDataTestCase {
         final String startPlusOneHour = "2013-03-10T09:00Z";
         final Date[] nominalTimesWithoutDSTChange = new Date[] {DateUtils.parseDateOozieTZ(startInThePast),
                 DateUtils.parseDateOozieTZ(startPlusOneHour)};
-        checkCoordActionsNominalTime(job.getId(), 2, nominalTimesWithoutDSTChange);
+        final int expectedNominalTimeCount = 2;
+        checkCoordActionsNominalTime(job.getId(), expectedNominalTimeCount, nominalTimesWithoutDSTChange);
 
-        try {
-            final JPAService jpaService = Services.get().get(JPAService.class);
-            job =  jpaService.execute(new CoordJobGetJPAExecutor(job.getId()));
-            assertTrue("coordinator job should have already been materialized", job.isDoneMaterialization());
-            assertEquals("coordinator action count mismatch", 2, job.getLastActionNumber());
-            final String startPlusTwoHours = "2013-03-10T10:00Z";
-            assertEquals("coordinator next materialization time mismatch",
-                    DateUtils.parseDateOozieTZ(startPlusTwoHours), job.getNextMaterializedTime());
-        }
-        catch (final JPAExecutorException se) {
-            se.printStackTrace();
-            fail("Job ID " + job.getId() + " was not stored properly in db");
-        }
+        checkTwoActionsAfterCatchup(job, expectedNominalTimeCount, "2013-03-10T10:00Z");
     }
 
     public void testActionMaterWithDST1() throws Exception {
@@ -766,6 +761,48 @@ public class TestCoordMaterializeTransitionXCommand extends XDataTestCase {
         // If the startTime and endTime straddle a DST shift (the Coord is in "America/Los_Angeles"), then we need to adjust for
         // that because startTime and endTime assume GMT
         next = new Date(startTime.getTime() + TIME_IN_DAY);
+        tz = TimeZone.getTimeZone(job.getTimeZone());
+        next.setTime(next.getTime() + DaylightOffsetCalculator.getDSTOffset(tz, startTime, next));
+        assertEquals(next, job.getNextMaterializedTime());
+
+        // Case: job started in Daylight time, and materialization is in
+        // Standard time
+        startTime = getDaylightCalendar().getTime();
+        endTime = new Date(startTime.getTime() + TIME_IN_DAY * 3);
+        job = addRecordToCoordJobTable(CoordinatorJob.Status.PREP, startTime, endTime, false, false, 0);
+        job.setNextMaterializedTime(startTime);
+        job.setMatThrottling(10);
+        job.setFrequency("1");
+        job.setTimeUnitStr("DAY");
+        CoordJobQueryExecutor.getInstance().executeUpdate(CoordJobQuery.UPDATE_COORD_JOB, job);
+        new CoordMaterializeTransitionXCommand(job.getId(), hoursToSeconds(1)).call();
+        job = jpaService.execute(new CoordJobGetJPAExecutor(job.getId()));
+        // If the startTime and endTime straddle a DST shift (the Coord is in
+        // "America/Los_Angeles"), then we need to adjust for
+        // that because startTime and endTime assume GMT
+        next = new Date(startTime.getTime() + TIME_IN_DAY * 3);
+        tz = TimeZone.getTimeZone(job.getTimeZone());
+        next.setTime(next.getTime() + DaylightOffsetCalculator.getDSTOffset(tz, startTime, next));
+
+        assertEquals(next, job.getNextMaterializedTime());
+
+        // Case: job started in Standard time, and materialization is in
+        // Daylight time
+        Calendar c = getStandardCalendar();
+        startTime = c.getTime();
+        endTime = new Date(startTime.getTime() + TIME_IN_DAY * 3);
+        job = addRecordToCoordJobTable(CoordinatorJob.Status.PREP, startTime, endTime, false, false, 0);
+        job.setNextMaterializedTime(startTime);
+        job.setMatThrottling(10);
+        job.setFrequency("1");
+        job.setTimeUnitStr("DAY");
+        CoordJobQueryExecutor.getInstance().executeUpdate(CoordJobQuery.UPDATE_COORD_JOB, job);
+        new CoordMaterializeTransitionXCommand(job, hoursToSeconds(1), startTime, endTime).call();
+        job = jpaService.execute(new CoordJobGetJPAExecutor(job.getId()));
+        // If the startTime and endTime straddle a DST shift (the Coord is in
+        // "America/Los_Angeles"), then we need to adjust for
+        // that because startTime and endTime assume GMT
+        next = new Date(startTime.getTime() + TIME_IN_DAY * 4);
         tz = TimeZone.getTimeZone(job.getTimeZone());
         next.setTime(next.getTime() + DaylightOffsetCalculator.getDSTOffset(tz, startTime, next));
         assertEquals(next, job.getNextMaterializedTime());

@@ -35,7 +35,6 @@ import org.apache.oozie.command.PreconditionException;
 import org.apache.oozie.command.bundle.BundleStatusUpdateXCommand;
 import org.apache.oozie.coord.CoordUtils;
 import org.apache.oozie.coord.TimeUnit;
-import org.apache.oozie.coord.input.logic.CoordInputLogicEvaluatorUtil;
 import org.apache.oozie.executor.jpa.BatchQueryExecutor;
 import org.apache.oozie.executor.jpa.BatchQueryExecutor.UpdateEntry;
 import org.apache.oozie.executor.jpa.CoordActionsActiveCountJPAExecutor;
@@ -112,24 +111,15 @@ public class CoordMaterializeTransitionXCommand extends MaterializeTransitionXCo
         this.endMatdTime = endTime;
     }
 
-    /* (non-Javadoc)
-     * @see org.apache.oozie.command.MaterializeTransitionXCommand#transitToNext()
-     */
     @Override
     public void transitToNext() throws CommandException {
     }
 
-    /* (non-Javadoc)
-     * @see org.apache.oozie.command.TransitionXCommand#updateJob()
-     */
     @Override
     public void updateJob() throws CommandException {
         updateList.add(new UpdateEntry(CoordJobQuery.UPDATE_COORD_JOB_MATERIALIZE,coordJob));
     }
 
-    /* (non-Javadoc)
-     * @see org.apache.oozie.command.MaterializeTransitionXCommand#performWrites()
-     */
     @Override
     public void performWrites() throws CommandException {
         try {
@@ -162,9 +152,6 @@ public class CoordMaterializeTransitionXCommand extends MaterializeTransitionXCo
         }
     }
 
-    /* (non-Javadoc)
-     * @see org.apache.oozie.command.XCommand#getEntityKey()
-     */
     @Override
     public String getEntityKey() {
         return this.jobId;
@@ -175,9 +162,6 @@ public class CoordMaterializeTransitionXCommand extends MaterializeTransitionXCo
         return true;
     }
 
-    /* (non-Javadoc)
-     * @see org.apache.oozie.command.XCommand#loadState()
-     */
     @Override
     protected void loadState() throws CommandException {
         jpaService = Services.get().get(JPAService.class);
@@ -284,9 +268,6 @@ public class CoordMaterializeTransitionXCommand extends MaterializeTransitionXCo
         }
     }
 
-    /* (non-Javadoc)
-     * @see org.apache.oozie.command.XCommand#verifyPrecondition()
-     */
     @Override
     protected void verifyPrecondition() throws CommandException, PreconditionException {
         if (!(coordJob.getStatus() == CoordinatorJobBean.Status.PREP || coordJob.getStatus() == CoordinatorJobBean.Status.RUNNING
@@ -352,9 +333,6 @@ public class CoordMaterializeTransitionXCommand extends MaterializeTransitionXCo
 
     }
 
-    /* (non-Javadoc)
-     * @see org.apache.oozie.command.MaterializeTransitionXCommand#materialize()
-     */
     @Override
     protected void materialize() throws CommandException {
         Instrumentation.Cron cron = new Instrumentation.Cron();
@@ -458,6 +436,7 @@ public class CoordMaterializeTransitionXCommand extends MaterializeTransitionXCo
         }
 
         boolean firstMater = true;
+
         while (effStart.compareTo(end) < 0 && (ignoreMaxActions || maxActionToBeCreated-- > 0)) {
             if (pause != null && effStart.compareTo(pause) >= 0) {
                 break;
@@ -600,17 +579,11 @@ public class CoordMaterializeTransitionXCommand extends MaterializeTransitionXCo
         job.setNextMaterializedTime(endMatdTime);
     }
 
-    /* (non-Javadoc)
-     * @see org.apache.oozie.command.XCommand#getKey()
-     */
     @Override
     public String getKey() {
         return getName() + "_" + jobId;
     }
 
-    /* (non-Javadoc)
-     * @see org.apache.oozie.command.TransitionXCommand#notifyParent()
-     */
     @Override
     public void notifyParent() throws CommandException {
         // update bundle action only when status changes in coord job
