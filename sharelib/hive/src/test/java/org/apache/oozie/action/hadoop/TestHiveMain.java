@@ -33,22 +33,18 @@ import java.util.Set;
 
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.oozie.action.hadoop.security.LauncherSecurityManager;
 import org.apache.oozie.test.MiniHCatServer;
 import org.apache.oozie.util.XConfiguration;
-import org.apache.oozie.action.hadoop.LauncherAM.LauncherSecurityManager;
 
 public class TestHiveMain extends MainTestCase {
-    private SecurityManager SECURITY_MANAGER;
-
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        SECURITY_MANAGER = System.getSecurityManager();
     }
 
     @Override
     protected void tearDown() throws Exception {
-        System.setSecurityManager(SECURITY_MANAGER);
         super.tearDown();
     }
 
@@ -141,33 +137,30 @@ public class TestHiveMain extends MainTestCase {
         setSystemProperty("oozie.action.conf.xml", actionXml.getAbsolutePath());
         setSystemProperty("oozie.action.externalChildIDs", externalChildIdsFile.getAbsolutePath());
 
-        LauncherSecurityManager sm = new LauncherSecurityManager();
-        sm.enable();
+        LauncherSecurityManager launcherSecurityManager = new LauncherSecurityManager();
+        launcherSecurityManager.enable();
         String user = System.getProperty("user.name");
         try {
             os = new FileOutputStream(hiveSite);
             jobConf.writeXml(os);
             os.close();
-
             MiniHCatServer.resetHiveConfStaticVariables();
             HiveMain.main(null);
-        }
-        catch (SecurityException ex) {
-            if (sm.getExitInvoked()) {
-                System.out.println("Intercepting System.exit(" + sm.getExitCode() + ")");
-                System.err.println("Intercepting System.exit(" + sm.getExitCode() + ")");
-                if (sm.getExitCode() != 0) {
+        } catch (SecurityException ex) {
+            if (launcherSecurityManager.getExitInvoked()) {
+                System.out.println("Intercepting System.exit(" + launcherSecurityManager.getExitCode() + ")");
+                System.err.println("Intercepting System.exit(" + launcherSecurityManager.getExitCode() + ")");
+                if (launcherSecurityManager.getExitCode() != 0) {
                     fail();
                 }
-            }
-            else {
+            } else {
                 throw ex;
             }
-        }
-        finally {
+        } finally {
             System.setProperty("user.name", user);
             hiveSite.delete();
             MiniHCatServer.resetHiveConfStaticVariables();
+            launcherSecurityManager.disable();
         }
 
         assertTrue(externalChildIdsFile.exists());
