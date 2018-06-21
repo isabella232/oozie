@@ -1,6 +1,7 @@
 -- Oozie 5.1.0 release (trunk - unreleased)
 
 OOZIE-3370 Property filtering is not consistent across job submission (andras.piros)
+OOZIE-3295 Flaky test TestSLACalculatorMemory#testAddMultipleRestartRemoveMultipleInstrumentedCorrectly (pbacsko via andras.piros)
 OOZIE-3289 TestJMSAccessorService#testConnectionRetry is still flaky (pbacsko via andras.piros)
 OOZIE-3224 Upgrade Jetty to 9.3 (kmarton via andras.piros)
 OOZIE-3260 [sla] Remove stale item above max retries on JPA related errors from in-memory SLA map (andras.piros)
