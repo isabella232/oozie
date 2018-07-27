@@ -90,6 +90,27 @@ public class ClasspathUtils {
             MRApps.addToEnvironment(env, ApplicationConstants.Environment.CLASSPATH.name(),
                     c.trim(), conf);
         }
+
+        addGPLExtrasJarsAndNativeLibs(env, conf);
+    }
+
+    /**
+     * Fix for CDH-70855 in case of {@code GPLEXTRAS} parcel is present:
+     * <ul>
+     *     <li>if {@code $MR2_CLASSPATH} environment variable is present, it's added to {@code CLASSPATH}</li>
+     *     <li>if {@code $JAVA_LIBRARY_PATH} environment variable is present, it's added to {@code LD_LIBRARY_PATH}</li>
+     * </ul>
+     * <p>
+     * If these environment variables are not present (in case no {@code GPLEXTRAS} parcel is installed), no effect is taken.
+     * <p>
+     * If {@code GPLEXTRAS} parcel is installed it's important to add any JARs and native libs so that Spark / MR actions can use.
+     *
+     * @param env environment variables as source
+     * @param conf {@link Configuration} as target
+     */
+    private static void addGPLExtrasJarsAndNativeLibs(final Map<String, String> env, final Configuration conf) {
+        MRApps.addToEnvironment(env,  ApplicationConstants.Environment.CLASSPATH.name(), "$MR2_CLASSPATH", conf);
+        MRApps.addToEnvironment(env,  ApplicationConstants.Environment.LD_LIBRARY_PATH.name(), "$JAVA_LIBRARY_PATH", conf);
     }
 
     // Adapted from MRApps#setClasspath
