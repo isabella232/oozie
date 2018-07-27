@@ -18,15 +18,11 @@
 
 package org.apache.oozie.util;
 
-import junit.framework.TestCase;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.filecache.DistributedCache;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.oozie.test.XFsTestCase;
-import org.apache.oozie.test.XTestCase;
 
-import java.net.URI;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -66,28 +62,32 @@ public class TestClasspathUtils extends XFsTestCase {
 
         ClasspathUtils.setupClasspath(env, conf);
 
-        assertEquals(2, env.size());
-        assertTrue(env.containsKey("CLASSPATH"));
+        assertEquals("environment variables size mismatch", 3, env.size());
+        assertTrue("CLASSPATH is not present", env.containsKey("CLASSPATH"));
         String[] paths = env.get("CLASSPATH").split(":");
-        assertEquals(9, paths.length);
+        assertEquals("CLASSPATH size mismatch", 10, paths.length);
         Arrays.sort(paths);
-        assertEquals("$HADOOP_COMMON_HOME/share/hadoop/common/*", paths[0]);
-        assertEquals("$HADOOP_COMMON_HOME/share/hadoop/common/lib/*", paths[1]);
-        assertEquals("$HADOOP_CONF_DIR", paths[2]);
-        assertEquals("$HADOOP_HDFS_HOME/share/hadoop/hdfs/*", paths[3]);
-        assertEquals("$HADOOP_HDFS_HOME/share/hadoop/hdfs/lib/*", paths[4]);
-        assertEquals("$HADOOP_YARN_HOME/share/hadoop/yarn/*", paths[5]);
-        assertEquals("$HADOOP_YARN_HOME/share/hadoop/yarn/lib/*", paths[6]);
-        assertEquals("$PWD", paths[7]);
-        assertEquals("$PWD/*", paths[8]);
+        assertEquals("CLASSPATH content mismatch", "$HADOOP_COMMON_HOME/share/hadoop/common/*", paths[0]);
+        assertEquals("CLASSPATH content mismatch", "$HADOOP_COMMON_HOME/share/hadoop/common/lib/*", paths[1]);
+        assertEquals("CLASSPATH content mismatch", "$HADOOP_CONF_DIR", paths[2]);
+        assertEquals("CLASSPATH content mismatch", "$HADOOP_HDFS_HOME/share/hadoop/hdfs/*", paths[3]);
+        assertEquals("CLASSPATH content mismatch", "$HADOOP_HDFS_HOME/share/hadoop/hdfs/lib/*", paths[4]);
+        assertEquals("CLASSPATH content mismatch", "$HADOOP_YARN_HOME/share/hadoop/yarn/*", paths[5]);
+        assertEquals("CLASSPATH content mismatch", "$HADOOP_YARN_HOME/share/hadoop/yarn/lib/*", paths[6]);
+        assertEquals("CLASSPATH content mismatch", "$MR2_CLASSPATH", paths[7]);
+        assertEquals("CLASSPATH content mismatch", "$PWD", paths[8]);
+        assertEquals("CLASSPATH content mismatch", "$PWD/*", paths[9]);
 
-        assertTrue(env.containsKey("$PWD"));
+        assertTrue("$PWD is not present", env.containsKey("$PWD"));
         paths = env.get("$PWD").split(":");
-        assertEquals(3, paths.length);
+        assertEquals("$PWD size mismatch", 3, paths.length);
         Arrays.sort(paths);
-        assertEquals("$PWD/foo.txt", paths[0]);
-        assertEquals("$PWD/foo.xml", paths[1]);
-        assertEquals("$PWD/foo.zip", paths[2]);
+        assertEquals("$PWD content mismatch", "$PWD/foo.txt", paths[0]);
+        assertEquals("$PWD content mismatch", "$PWD/foo.xml", paths[1]);
+        assertEquals("$PWD content mismatch", "$PWD/foo.zip", paths[2]);
+
+        assertTrue("LD_LIBRARY_PATH is not present", env.containsKey("LD_LIBRARY_PATH"));
+        assertEquals("LD_LIBRARY_PATH content mismatch", "$JAVA_LIBRARY_PATH", env.get("LD_LIBRARY_PATH"));
     }
 
     public void testAddMapReduceToClasspath() throws Exception {
@@ -97,11 +97,11 @@ public class TestClasspathUtils extends XFsTestCase {
         ClasspathUtils.addMapReduceToClasspath(env, conf);
 
         assertEquals(1, env.size());
-        assertTrue(env.containsKey("CLASSPATH"));
+        assertTrue("CLASSPATH is not present", env.containsKey("CLASSPATH"));
         String[] paths = env.get("CLASSPATH").split(":");
-        assertEquals(2, paths.length);
+        assertEquals("CLASSPATH size mismatch", 2, paths.length);
         Arrays.sort(paths);
-        assertEquals("$HADOOP_MAPRED_HOME/share/hadoop/mapreduce/*", paths[0]);
-        assertEquals("$HADOOP_MAPRED_HOME/share/hadoop/mapreduce/lib/*", paths[1]);
+        assertEquals("CLASSPATH content mismatch", "$HADOOP_MAPRED_HOME/share/hadoop/mapreduce/*", paths[0]);
+        assertEquals("CLASSPATH content mismatch", "$HADOOP_MAPRED_HOME/share/hadoop/mapreduce/lib/*", paths[1]);
     }
 }
