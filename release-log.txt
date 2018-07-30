@@ -1,6 +1,7 @@
 -- Oozie 5.1.0 release (trunk - unreleased)
 
 OOZIE-3370 Property filtering is not consistent across job submission (andras.piros)
+OOZIE-3303 Oozie UI does not work after Jetty 9.3 upgrade (asalamon74 via gezapeti)
 OOZIE-3309 Runtime error during /v2/sla filtering for bundle (asalamon74 via andras.piros)
 OOZIE-3295 Flaky test TestSLACalculatorMemory#testAddMultipleRestartRemoveMultipleInstrumentedCorrectly (pbacsko via andras.piros)
 OOZIE-3289 TestJMSAccessorService#testConnectionRetry is still flaky (pbacsko via andras.piros)
