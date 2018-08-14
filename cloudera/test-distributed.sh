@@ -32,6 +32,12 @@ if [[ -z $DIST_TEST_USER || -z $DIST_TEST_PASSWORD ]]; then
     source dist_test_cred.sh
 fi
 
+if [[ ! -z $DIST_TEST_MVN_SETTINGS_FILE ]]; then
+    echo "Using maven settings file from: $DIST_TEST_MVN_SETTINGS_FILE"
+    echo "maven_settings_file = $DIST_TEST_MVN_SETTINGS_FILE" >> ./env/grind.cfg
+fi
+
+
 # Go to project root
 cd "$DIR/.."
 
