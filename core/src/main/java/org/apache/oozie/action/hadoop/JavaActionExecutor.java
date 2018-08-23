@@ -1649,12 +1649,8 @@ public class JavaActionExecutor extends ActionExecutor {
         try {
             Element actionXml = XmlUtils.parseXml(action.getConf());
             final JobConf jobConf = createBaseHadoopConf(context, actionXml);
-            WorkflowJob wfJob = context.getWorkflow();
-            Configuration conf = null;
-            if ( wfJob.getConf() != null ) {
-                conf = new XConfiguration(new StringReader(wfJob.getConf()));
-            }
-            String launcherTag = LauncherMapperHelper.getActionYarnTag(conf, wfJob.getParentId(), action);
+
+            String launcherTag = getActionYarnTag(context, action);
             jobConf.set(LauncherMainHadoopUtils.CHILD_MAPREDUCE_JOB_TAGS, LauncherMapperHelper.getTag(launcherTag));
             jobConf.set(LauncherMainHadoopUtils.OOZIE_JOB_LAUNCH_TIME, Long.toString(action.getStartTime().getTime()));
             UserGroupInformation ugi = Services.get().get(UserGroupInformationService.class)
@@ -1695,6 +1691,10 @@ public class JavaActionExecutor extends ActionExecutor {
                 }
             }
         }
+    }
+
+    private String getActionYarnTag(Context context, WorkflowAction action) {
+        return LauncherMapperHelper.getActionYarnTag(context.getProtoActionConf(), context.getWorkflow().getParentId(), action);
     }
 
     private static Set<String> FINAL_STATUS = new HashSet<String>();

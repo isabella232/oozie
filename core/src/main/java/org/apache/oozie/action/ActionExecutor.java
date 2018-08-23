@@ -596,8 +596,8 @@ public abstract class ActionExecutor {
      * @param action the action
      * @return the action yarn tag
      */
-    public String getActionYarnTag(Configuration conf, WorkflowJob wfJob, WorkflowAction action) {
-        if (conf.get(OOZIE_ACTION_YARN_TAG) != null) {
+    public static String getActionYarnTag(Configuration conf, WorkflowJob wfJob, WorkflowAction action) {
+        if (conf != null && conf.get(OOZIE_ACTION_YARN_TAG) != null) {
             return conf.get(OOZIE_ACTION_YARN_TAG) + "@" + action.getName();
         }
         else if (wfJob.getParentId() != null) {
