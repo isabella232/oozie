@@ -31,7 +31,9 @@ import java.io.OutputStreamWriter;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -56,6 +58,7 @@ import org.apache.hadoop.yarn.api.protocolrecords.GetApplicationsRequest;
 import org.apache.hadoop.yarn.api.protocolrecords.GetApplicationsResponse;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.ApplicationReport;
+import org.apache.hadoop.yarn.api.records.FinalApplicationStatus;
 import org.apache.hadoop.yarn.client.ClientRMProxy;
 import org.apache.hadoop.yarn.client.api.YarnClient;
 import org.apache.hadoop.yarn.exceptions.YarnException;
@@ -196,36 +199,9 @@ public abstract class LauncherMain {
 
     public static Set<ApplicationId> getChildYarnJobs(Configuration actionConf, ApplicationsRequestScope scope,
                                                       long startTime) {
-        Set<ApplicationId> childYarnJobs = new HashSet<ApplicationId>();
-        String tag = actionConf.get(CHILD_MAPREDUCE_JOB_TAGS);
-        if (tag == null) {
-            System.out.print("Could not find YARN tags property " + CHILD_MAPREDUCE_JOB_TAGS);
-            return childYarnJobs;
-        }
-        System.out.println("tag id : " + tag);
-        GetApplicationsRequest gar = GetApplicationsRequest.newInstance();
-        gar.setScope(scope);
-        gar.setApplicationTags(Collections.singleton(tag));
-        long endTime = System.currentTimeMillis();
-        if (startTime > endTime) {
-            System.out.println("WARNING: Clock skew between the Oozie server host and this host detected.  Please fix this.  " +
-                    "Attempting to work around...");
-            // We don't know which one is wrong (relative to the RM), so to be safe, let's assume they're both wrong and add an
-            // offset in both directions
-            long diff = 2 * (startTime - endTime);
-            startTime = startTime - diff;
-            endTime = endTime + diff;
-        }
-        gar.setStartRange(startTime, endTime);
-        try {
-            ApplicationClientProtocol proxy = ClientRMProxy.createRMProxy(actionConf, ApplicationClientProtocol.class);
-            GetApplicationsResponse apps = proxy.getApplications(gar);
-            List<ApplicationReport> appsList = apps.getApplicationList();
-            for(ApplicationReport appReport : appsList) {
-                childYarnJobs.add(appReport.getApplicationId());
-            }
-        } catch (YarnException | IOException ioe) {
-            throw new RuntimeException("Exception occurred while finding child jobs", ioe);
+        final Set<ApplicationId> childYarnJobs = new HashSet<ApplicationId>();
+        for (final ApplicationReport applicationReport : getChildYarnApplications(actionConf, scope, startTime)) {
+            childYarnJobs.add(applicationReport.getApplicationId());
         }
 
         if (childYarnJobs.isEmpty()) {
@@ -250,26 +226,79 @@ public abstract class LauncherMain {
         return getChildYarnJobs(actionConf, scope, startTime);
     }
 
+    public static List<ApplicationReport> getChildYarnApplications(final Configuration actionConf,
+                                                                   final ApplicationsRequestScope scope,
+                                                                   long startTime) {
+        final String tag = actionConf.get(CHILD_MAPREDUCE_JOB_TAGS);
+        if (tag == null) {
+            System.out.print("Could not find YARN tags property " + CHILD_MAPREDUCE_JOB_TAGS);
+            return Collections.emptyList();
+        }
+
+        System.out.println("tag id : " + tag);
+        final GetApplicationsRequest gar = GetApplicationsRequest.newInstance();
+        gar.setScope(scope);
+        gar.setApplicationTags(Collections.singleton(tag));
+        long endTime = System.currentTimeMillis();
+        if (startTime > endTime) {
+            System.out.println("WARNING: Clock skew between the Oozie server host and this host detected.  Please fix this.  " +
+                    "Attempting to work around...");
+            // We don't know which one is wrong (relative to the RM), so to be safe, let's assume they're both wrong and add an
+            // offset in both directions
+            final long diff = 2 * (startTime - endTime);
+            startTime = startTime - diff;
+            endTime = endTime + diff;
+        }
+        gar.setStartRange(startTime, endTime);
+        try {
+            final ApplicationClientProtocol proxy = ClientRMProxy.createRMProxy(actionConf, ApplicationClientProtocol.class);
+            final GetApplicationsResponse apps = proxy.getApplications(gar);
+            return apps.getApplicationList();
+        } catch (final YarnException | IOException e) {
+            throw new RuntimeException("Exception occurred while finding child jobs", e);
+        }
+    }
+
     public static void killChildYarnJobs(Configuration actionConf) {
         try {
             Set<ApplicationId> childYarnJobs = getChildYarnJobs(actionConf);
             if (!childYarnJobs.isEmpty()) {
-                System.out.println();
-                System.out.println("Found [" + childYarnJobs.size() + "] YARN application(s) from this launcher");
-                System.out.println("Killing existing applications and starting over:");
-                YarnClient yarnClient = YarnClient.createYarnClient();
-                yarnClient.init(actionConf);
-                yarnClient.start();
-                for (ApplicationId app : childYarnJobs) {
-                    System.out.print("Killing [" + app + "] ... ");
-                    yarnClient.killApplication(app);
-                    System.out.println("Done");
-                }
-                System.out.println();
+                checkAndKillChildYarnJobs(YarnClient.createYarnClient(), actionConf, childYarnJobs);
             }
         } catch (IOException | YarnException ye) {
             throw new RuntimeException("Exception occurred while killing child job(s)", ye);
         }
+    }
+
+    @VisibleForTesting
+    protected static Collection<ApplicationId> checkAndKillChildYarnJobs(YarnClient yarnClient,
+                                                                         Configuration actionConf,
+                                                                         Collection<ApplicationId> childYarnJobs)
+            throws YarnException, IOException {
+
+        System.out.println();
+        System.out.println("Found [" + childYarnJobs.size() + "] YARN application(s) from this launcher");
+        System.out.println("Killing existing applications and starting over:");
+        yarnClient.init(actionConf);
+        yarnClient.start();
+        Collection<ApplicationId> killedapps = new ArrayList<>();
+        for (ApplicationId app : childYarnJobs) {
+            if (finalAppStatusUndefined(yarnClient.getApplicationReport(app))) {
+                System.out.print("Killing [" + app + "] ... ");
+                yarnClient.killApplication(app);
+                System.out.println("Done");
+                killedapps.add(app);
+            }
+        }
+        System.out.println();
+        return killedapps;
+    }
+
+    private static boolean finalAppStatusUndefined(ApplicationReport appReport) {
+        FinalApplicationStatus status = appReport.getFinalApplicationStatus();
+        return !FinalApplicationStatus.SUCCEEDED.equals(status) &&
+                !FinalApplicationStatus.FAILED.equals(status) &&
+                !FinalApplicationStatus.KILLED.equals(status);
     }
 
     protected abstract void run(String[] args) throws Exception;
