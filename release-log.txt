@@ -1,5 +1,6 @@
 -- Oozie 5.1.0 release (trunk - unreleased)
 
+OOZIE-3354 [core] [SSH action] SSH action gets hung (andras.piros)
 OOZIE-2494 Cron syntax not handling DST properly (kmarton via andras.piros)
 
 -- Oozie 5.0.0 release
