@@ -93,7 +93,6 @@
          <spark.streaming.kafka.version>${cdh.spark.version}</spark.streaming.kafka.version>
          <spark.bagel.version>${cdh.spark.version}</spark.bagel.version>
          <spark.version>${cdh.spark.version}</spark.version>
-         <spark-avro.version>${cdh.spark-avro.version}</spark-avro.version>
          <spark.guava.version>${cdh.guava.version}</spark.guava.version>
          <spark.scala.binary.version>${cdh.scala.binary.version}</spark.scala.binary.version>
          <streaming.version>${hadoop.version}</streaming.version>
