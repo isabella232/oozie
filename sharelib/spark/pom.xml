@@ -225,9 +225,9 @@
             <scope>compile</scope>
         </dependency>
        <dependency>
-            <groupId>com.databricks</groupId>
+            <groupId>org.apache.spark</groupId>
             <artifactId>spark-avro_${spark.scala.binary.version}</artifactId>
-            <version>${spark-avro.version}</version>
+            <version>${spark.version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
