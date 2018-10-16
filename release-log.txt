@@ -1,7 +1,8 @@
 -- Oozie 5.1.0 release (trunk - unreleased)
 
-OOZIE-2791 ShareLib installation may fail on busy Hadoop clusters (asasvari, kmarton via pbacsko, andras.piros)
+OOZIE-3369 [core] Upgrade guru.nidi:graphviz-java to 0.7.0 (andras.piros)
 OOZIE-3348 amend [Hive action] Remove dependency hive-contrib (kmarton via andras.piros)
+OOZIE-2791 ShareLib installation may fail on busy Hadoop clusters (asasvari, kmarton via pbacsko, andras.piros)
 OOZIE-3348 [Hive action] Remove dependency hive-contrib (kmarton via andras.piros)
 OOZIE-3354 [core] [SSH action] SSH action gets hung (andras.piros)
 OOZIE-2494 Cron syntax not handling DST properly (kmarton via andras.piros)
