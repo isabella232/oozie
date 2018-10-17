@@ -15,5 +15,7 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<Context path="/oozie">
+<Context path="/oozie" 
+	mapperContextRootRedirectEnabled="true"
+	mapperDirectoryRedirectEnabled="true">
 </Context>
