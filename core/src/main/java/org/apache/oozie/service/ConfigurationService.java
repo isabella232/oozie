@@ -540,6 +540,11 @@ public class ConfigurationService implements Service, Instrumentable {
         return conf.getBoolean(name, ConfigUtils.BOOLEAN_DEFAULT);
     }
 
+    public static boolean getBoolean(final String name, final boolean defaultValue) {
+        final Configuration conf = Services.get().getConf();
+        return conf.getBoolean(name, defaultValue);
+    }
+
     public static int getInt(String name) {
         Configuration conf = Services.get().getConf();
         return getInt(conf, name);
