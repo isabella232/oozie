@@ -41,6 +41,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.primitives.Ints;
 import org.apache.directory.api.util.Strings;
 import org.apache.hadoop.conf.Configuration;
@@ -94,14 +95,23 @@ import org.jdom.Namespace;
 
 public class JavaActionExecutor extends ActionExecutor {
 
-    private static final String HADOOP_USER = "user.name";
+    @VisibleForTesting
+    public static final String HADOOP_USER = "user.name";
     public static final String HADOOP_JOB_TRACKER = "mapred.job.tracker";
     public static final String HADOOP_JOB_TRACKER_2 = "mapreduce.jobtracker.address";
     public static final String HADOOP_YARN_RM = "yarn.resourcemanager.address";
     public static final String HADOOP_NAME_NODE = "fs.default.name";
     private static final String HADOOP_JOB_NAME = "mapred.job.name";
+    public static final String MR_JOB_USER_NAME = "mapreduce.job.user.name";
     public static final String OOZIE_COMMON_LIBDIR = "oozie";
-    private static final Set<String> DISALLOWED_PROPERTIES = new HashSet<String>();
+    private static final Set<String> DISALLOWED_PROPERTIES = ImmutableSet.of(
+            HADOOP_USER,
+            HADOOP_JOB_TRACKER,
+            HADOOP_NAME_NODE,
+            HADOOP_JOB_TRACKER_2,
+            HADOOP_YARN_RM,
+            MR_JOB_USER_NAME
+    );
     public final static String MAX_EXTERNAL_STATS_SIZE = "oozie.external.stats.max.size";
     public static final String ACL_VIEW_JOB = "mapreduce.job.acl-view-job";
     public static final String ACL_MODIFY_JOB = "mapreduce.job.acl-modify-job";
@@ -137,14 +147,6 @@ public class JavaActionExecutor extends ActionExecutor {
     private static final LauncherInputFormatClassLocator launcherInputFormatClassLocator = new LauncherInputFormatClassLocator();
 
     public XConfiguration workflowConf = null;
-
-    static {
-        DISALLOWED_PROPERTIES.add(HADOOP_USER);
-        DISALLOWED_PROPERTIES.add(HADOOP_JOB_TRACKER);
-        DISALLOWED_PROPERTIES.add(HADOOP_NAME_NODE);
-        DISALLOWED_PROPERTIES.add(HADOOP_JOB_TRACKER_2);
-        DISALLOWED_PROPERTIES.add(HADOOP_YARN_RM);
-    }
 
     public JavaActionExecutor() {
         this("java");
@@ -235,11 +237,19 @@ public class JavaActionExecutor extends ActionExecutor {
         return conf;
     }
 
-    private static void injectLauncherProperties(Configuration srcConf, Configuration launcherConf) {
-        for (Map.Entry<String, String> entry : srcConf) {
+    @VisibleForTesting
+    static void injectLauncherProperties(final Configuration srcConf, final Configuration launcherConf)
+            throws ActionExecutorException {
+        final XLog log = XLog.getLog(JavaActionExecutor.class);
+        for (final Map.Entry<String, String> entry : srcConf) {
             if (entry.getKey().startsWith("oozie.launcher.")) {
-                String name = entry.getKey().substring("oozie.launcher.".length());
-                String value = entry.getValue();
+                final String name = entry.getKey().substring("oozie.launcher.".length());
+                if (JavaActionExecutor.DISALLOWED_PROPERTIES.contains(name)) {
+                    log.error("Property [{0}] not allowed in launcher configuration", name);
+                    throw new ActionExecutorException(ActionExecutorException.ErrorType.FAILED, "JA010",
+                            "Property [{0}] not allowed in launcher configuration", name);
+                }
+                final String value = entry.getValue();
                 // setting original KEY
                 launcherConf.set(entry.getKey(), value);
                 // setting un-prefixed key (to allow Hadoop job config
