@@ -21,6 +21,7 @@ package org.apache.oozie.action.hadoop;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Closeables;
 import com.google.common.primitives.Ints;
 
@@ -161,7 +162,9 @@ public class JavaActionExecutor extends ActionExecutor {
 
     private static final String JAVA_MAIN_CLASS_NAME = "org.apache.oozie.action.hadoop.JavaMain";
     private static final String HADOOP_JOB_NAME = "mapred.job.name";
-    private static final Set<String> DISALLOWED_PROPERTIES = new HashSet<String>();
+    static final Set<String> DISALLOWED_PROPERTIES = ImmutableSet.of(
+            OozieClient.USER_NAME, MRJobConfig.USER_NAME, HADOOP_NAME_NODE, HADOOP_YARN_RM
+    );
     private static final String OOZIE_ACTION_NAME = "oozie.action.name";
     private final static String ACTION_SHARELIB_FOR = "oozie.action.sharelib.for.";
 
@@ -175,12 +178,6 @@ public class JavaActionExecutor extends ActionExecutor {
     private static final String JAVA_TMP_DIR_SETTINGS = "-Djava.io.tmpdir=";
 
     public XConfiguration workflowConf = null;
-
-    static {
-        DISALLOWED_PROPERTIES.add(HADOOP_USER);
-        DISALLOWED_PROPERTIES.add(HADOOP_NAME_NODE);
-        DISALLOWED_PROPERTIES.add(HADOOP_YARN_RM);
-    }
 
     public JavaActionExecutor() {
         this("java");
