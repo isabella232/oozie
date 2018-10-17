@@ -86,6 +86,8 @@ import org.jdom.Element;
 import org.junit.Assert;
 import org.junit.Test;
 
+import static org.apache.oozie.action.hadoop.JavaActionExecutor.HADOOP_USER;
+
 public class TestJavaActionExecutor extends ActionExecutorTestCase {
 
     @Override
@@ -3100,5 +3102,20 @@ public class TestJavaActionExecutor extends ActionExecutorTestCase {
     public void testFileWithSpaces() throws Exception {
         String actPath = JavaActionExecutor.getTrimmedEncodedPath("/user/map dev/test-case/shell/script/shell 1.sh");
         assertEquals("/user/map%20dev/test-case/shell/script/shell%201.sh", actPath);
+    }
+
+    public void testLauncherConfigurationFiltering() {
+        final Configuration sourceConf = new Configuration(false);
+        sourceConf.set("oozie.launcher." + HADOOP_USER, "should-not-be-present");
+        final Configuration launcherConf = new Configuration(false);
+
+        try {
+            JavaActionExecutor.injectLauncherProperties(sourceConf, launcherConf);
+            fail(String.format("configuration entry %s should be filtered out", HADOOP_USER));
+        }
+        catch (final ActionExecutorException e) {
+            assertEquals("error code mismatch", "JA010", e.getErrorCode());
+        }
+
     }
 }
