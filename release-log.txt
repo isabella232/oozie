@@ -4,6 +4,8 @@ OOZIE-3378 [core] Coordinator action's status is SUBMITTED after E1003 error (as
 
 -- Oozie 5.1.0 release (trunk - unreleased)
 
+OOZIE-3376 [tests] TestGraphGenerator should assume JDK8 minor version at least 1.8.0_u40 (andras.piros)
+OOZIE-3370 amend Property filtering is not consistent across job submission (andras.piros)
 OOZIE-3370 Property filtering is not consistent across job submission (andras.piros)
 OOZIE-3351 [tests] Flaky test TestMemoryLocks#testWriteLockSameThreadNoWait() (pbacsko)
 OOZIE-3229 [client] [ui] Improved SLA filtering options (asalamon74, andras.piros)
