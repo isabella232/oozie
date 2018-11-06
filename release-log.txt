@@ -1,3 +1,7 @@
+-- Oozie 5.2.0 release (trunk - unreleased)
+
+OOZIE-3378 [core] Coordinator action's status is SUBMITTED after E1003 error (asalamon74 via andras.piros)
+
 -- Oozie 5.1.0 release
 
 OOZIE-3390 [Shell action] STDERR contains a bogus error message (kmarton, andras.piros)
