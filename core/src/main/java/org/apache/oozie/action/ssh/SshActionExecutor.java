@@ -41,6 +41,7 @@ import org.apache.oozie.service.CallbackService;
 import org.apache.oozie.service.ConfigurationService;
 import org.apache.oozie.servlet.CallbackServlet;
 import org.apache.oozie.service.Services;
+import org.apache.oozie.util.BufferDrainer;
 import org.apache.oozie.util.IOUtils;
 import org.apache.oozie.util.PropertiesUtils;
 import org.apache.oozie.util.XLog;
@@ -146,11 +147,11 @@ public class SshActionExecutor extends ActionExecutor {
                 LOG.debug("Ssh command [{0}]", dataCommand);
                 try {
                     final Process process = Runtime.getRuntime().exec(dataCommand.split("\\s"));
-
-                    final StringBuffer outBuffer = new StringBuffer();
-                    final StringBuffer errBuffer = new StringBuffer();
+                    final BufferDrainer bufferDrainer = new BufferDrainer(process, maxLen);
+                    bufferDrainer.drainBuffers();
+                    final StringBuffer outBuffer = bufferDrainer.getInputBuffer();
+                    final StringBuffer errBuffer = bufferDrainer.getErrorBuffer();
                     boolean overflow = false;
-                    drainBuffers(process, outBuffer, errBuffer, maxLen);
                     LOG.trace("outBuffer={0}", outBuffer);
                     LOG.trace("errBuffer={0}", errBuffer);
                     if (outBuffer.length() > maxLen) {
@@ -306,9 +307,10 @@ public class SshActionExecutor extends ActionExecutor {
         String outFile = getRemoteFileName(context, action, "pid", false, false);
         String getOutputCmd = SSH_COMMAND_BASE + host + " cat " + outFile;
         try {
-            Process process = Runtime.getRuntime().exec(getOutputCmd.split("\\s"));
-            StringBuffer buffer = new StringBuffer();
-            drainBuffers(process, buffer, null, maxLen);
+            final Process process = Runtime.getRuntime().exec(getOutputCmd.split("\\s"));
+            final BufferDrainer bufferDrainer = new BufferDrainer(process, maxLen);
+            bufferDrainer.drainBuffers();
+            final StringBuffer buffer = bufferDrainer.getInputBuffer();
             String pid = getFirstLine(buffer);
 
             if (Long.valueOf(pid) > 0) {
@@ -358,8 +360,9 @@ public class SshActionExecutor extends ActionExecutor {
         Runtime runtime = Runtime.getRuntime();
         Process p = runtime.exec(command.split("\\s"));
 
-        StringBuffer errorBuffer = new StringBuffer();
-        int exitValue = drainBuffers(p, null, errorBuffer, maxLen);
+        final BufferDrainer bufferDrainer = new BufferDrainer(p, maxLen);
+        final int exitValue = bufferDrainer.drainBuffers();
+        final StringBuffer errorBuffer = bufferDrainer.getErrorBuffer();
 
         if (exitValue != 0) {
             String error = getTruncatedString(errorBuffer);
@@ -447,10 +450,10 @@ public class SshActionExecutor extends ActionExecutor {
         LOG.trace("Executing SSH command [finalCommand={0}]", Arrays.toString(finalCommand));
         final Process p = runtime.exec(finalCommand);
 
-        final StringBuffer inputBuffer = new StringBuffer();
-        final StringBuffer errorBuffer = new StringBuffer();
-        final int exitValue = drainBuffers(p, inputBuffer, errorBuffer, maxLen);
-
+        BufferDrainer bufferDrainer = new BufferDrainer(p, maxLen);
+        final int exitValue = bufferDrainer.drainBuffers();
+        final StringBuffer inputBuffer = bufferDrainer.getInputBuffer();
+        final StringBuffer errorBuffer = bufferDrainer.getErrorBuffer();
         final String pid = getFirstLine(inputBuffer);
 
         if (exitValue != 0) {
@@ -504,7 +507,8 @@ public class SshActionExecutor extends ActionExecutor {
         Process ps = null;
         try {
             ps = Runtime.getRuntime().exec(command.split("\\s"));
-            returnValue = drainBuffers(ps, null, null, 0);
+            final BufferDrainer bufferDrainer = new BufferDrainer(ps, 0);
+            returnValue = bufferDrainer.drainBuffers();
         }
         catch (IOException e) {
             throw new ActionExecutorException(ActionExecutorException.ErrorType.ERROR, "FAILED_OPERATION", XLog.format(
