@@ -4,7 +4,7 @@
 #!/bin/bash -xe
 export JAVA8_BUILD=true
 . /opt/toolchain/toolchain.sh
-export branchName="cdh6.x"
+export branchName="cdh6.1.x"
 export PATH=$MAVEN_3_5_0_HOME/bin:$PATH
 export CDH_GBN=$(curl "http://builddb.infra.cloudera.com:8080/resolvealias?alias=${branchName}")
 env
