@@ -804,11 +804,6 @@
                 </exclusions>
             </dependency>
             <dependency>
-                <groupId>org.apache.hadoop</groupId>
-                <artifactId>hadoop-mapreduce-client-core</artifactId>
-                <version>${hadoop.version}</version>
-            </dependency>
-            <dependency>
                 <groupId>org.apache.openjpa</groupId>
                 <artifactId>openjpa-persistence</artifactId>
                 <version>${openjpa.version}</version>
@@ -1895,7 +1890,6 @@
                     <threshold>Low</threshold>
                     <xmlOutput>true</xmlOutput>
                     <findbugsXmlOutputDirectory>${project.build.directory}/findbugs</findbugsXmlOutputDirectory>
-                    <excludeFilterFile>findbugs-filter.xml</excludeFilterFile>
                     <plugins>
                         <plugin>
                             <groupId>com.h3xstream.findsecbugs</groupId>

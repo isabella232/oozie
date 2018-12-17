@@ -36,7 +36,6 @@ import org.apache.hadoop.fs.Path;
 import org.apache.oozie.action.hadoop.security.LauncherSecurityManager;
 import org.apache.oozie.test.MiniHCatServer;
 import org.apache.oozie.util.XConfiguration;
-import org.apache.oozie.action.hadoop.LauncherAM.LauncherSecurityManager;
 
 public class TestHiveMain extends MainTestCase {
     @Override

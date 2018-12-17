@@ -687,7 +687,7 @@ public class TestCoordMaterializeTransitionXCommand extends XDataTestCase {
         // that because startTime and endTime assume GMT
         Date next = new Date(startTime.getTime() + TIME_IN_DAY * 3);
         TimeZone tz = TimeZone.getTimeZone(job.getTimeZone());
-        next.setTime(next.getTime() + getDSTOffset(tz, startTime, next));
+        next.setTime(next.getTime() + DaylightOffsetCalculator.getDSTOffset(tz, startTime, next));
         assertEquals(next, job.getNextMaterializedTime());
 
         // test with hours, time should not pass the current time.
@@ -705,7 +705,7 @@ public class TestCoordMaterializeTransitionXCommand extends XDataTestCase {
         // that because startTime and endTime assume GMT
         next = new Date(startTime.getTime() + TIME_IN_DAY);
         tz = TimeZone.getTimeZone(job.getTimeZone());
-        next.setTime(next.getTime() + getDSTOffset(tz, startTime, next));
+        next.setTime(next.getTime() + DaylightOffsetCalculator.getDSTOffset(tz, startTime, next));
         assertEquals(next, job.getNextMaterializedTime());
 
         // for current job in min, should not exceed hour windows
@@ -722,7 +722,7 @@ public class TestCoordMaterializeTransitionXCommand extends XDataTestCase {
         // that because startTime and endTime assume GMT
         next = new Date(startTime.getTime() + TIME_IN_HOURS);
         tz = TimeZone.getTimeZone(job.getTimeZone());
-        next.setTime(next.getTime() + getDSTOffset(tz, startTime, next));
+        next.setTime(next.getTime() + DaylightOffsetCalculator.getDSTOffset(tz, startTime, next));
         assertEquals(next, job.getNextMaterializedTime());
 
         // for current job in hour, should not exceed hour windows
@@ -739,7 +739,7 @@ public class TestCoordMaterializeTransitionXCommand extends XDataTestCase {
         // that because startTime and endTime assume GMT
         next = new Date(startTime.getTime() + TIME_IN_DAY);
         tz = TimeZone.getTimeZone(job.getTimeZone());
-        next.setTime(next.getTime() + getDSTOffset(tz, startTime, next));
+        next.setTime(next.getTime() + DaylightOffsetCalculator.getDSTOffset(tz, startTime, next));
         assertEquals(next, job.getNextMaterializedTime());
 
         // Case: job started in Daylight time, and materialization is in
@@ -759,7 +759,7 @@ public class TestCoordMaterializeTransitionXCommand extends XDataTestCase {
         // that because startTime and endTime assume GMT
         next = new Date(startTime.getTime() + TIME_IN_DAY * 3);
         tz = TimeZone.getTimeZone(job.getTimeZone());
-        next.setTime(next.getTime() + getDSTOffset(tz, startTime, next));
+        next.setTime(next.getTime() + DaylightOffsetCalculator.getDSTOffset(tz, startTime, next));
 
         assertEquals(next, job.getNextMaterializedTime());
 
@@ -781,7 +781,7 @@ public class TestCoordMaterializeTransitionXCommand extends XDataTestCase {
         // that because startTime and endTime assume GMT
         next = new Date(startTime.getTime() + TIME_IN_DAY * 4);
         tz = TimeZone.getTimeZone(job.getTimeZone());
-        next.setTime(next.getTime() + getDSTOffset(tz, startTime, next));
+        next.setTime(next.getTime() + DaylightOffsetCalculator.getDSTOffset(tz, startTime, next));
         assertEquals(next, job.getNextMaterializedTime());
 
     }
@@ -1326,20 +1326,6 @@ public class TestCoordMaterializeTransitionXCommand extends XDataTestCase {
             se.printStackTrace();
             fail("Action ID " + actionId + " was not stored properly in db");
         }
-    }
-
-    private long getDSTOffset(TimeZone tz, Date d1, Date d2) {
-        if (tz.inDaylightTime(d1) && !tz.inDaylightTime(d2)) {
-            Calendar cal = Calendar.getInstance(tz);
-            cal.setTime(d1);
-            return cal.get(Calendar.DST_OFFSET);
-        }
-        if (!tz.inDaylightTime(d1) && tz.inDaylightTime(d2)) {
-            Calendar cal = Calendar.getInstance(tz);
-            cal.setTime(d2);
-            return cal.get(Calendar.DST_OFFSET);
-        }
-        return 0;
     }
 
     /**
