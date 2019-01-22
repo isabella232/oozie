@@ -1,5 +1,6 @@
 -- Oozie 5.2.0 release (trunk - unreleased)
 
+OOZIE-3400 [core] Fix PurgeService sub-sub-workflow checking (asalamon74 via andras.piros)
 OOZIE-3382 [SSH action] [SSH action] Optimize process streams draining (asalamon74 via andras.piros)
 OOZIE-3384 [tests] TestWorkflowActionRetryInfoXCommand#testRetryConsoleUrlForked() is flaky (asalamon74 via kmarton)
 OOZIE-3378 [core] Coordinator action's status is SUBMITTED after E1003 error (asalamon74 via andras.piros)
