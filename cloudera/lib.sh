@@ -129,7 +129,7 @@ function runTestSet() {
 # Setup the infra_tools and return the location of the infra_tools
 function provisionInfraTools() {
   rm -r -f infra_tools
-  wget -q http://github.mtv.cloudera.com/QE/infra_tools/archive/master.zip
+  wget -q https://github.infra.cloudera.com/QE/infra_tools/archive/master.zip
   unzip -q -o master.zip
   mv infra_tools-master infra_tools
   rm master.zip
