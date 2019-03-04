@@ -1,5 +1,6 @@
 -- Oozie 5.2.0 release (trunk - unreleased)
 
+OOZIE-3409 Oozie Server : Memory leak in EL evaluation (asalamon74 via kmarton)
 OOZIE-3438 Copy only apache-jsp server dependencies to distro (asalamon74 via kmarton)
 OOZIE-3427 [core] Use best practices in HTTP response headers (asalamon74 via andras.piros)
 OOZIE-2949 Escape quotes whitespaces in Sqoop <command> field (asalamon74 via kmarton)

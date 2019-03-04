@@ -98,7 +98,8 @@
          <streaming.version>${hadoop.version}</streaming.version>
          <hadoop.auth.version>${hadoop.version}</hadoop.auth.version>
 
-        <jetty.version>${cdh.jetty9.version}</jetty.version>
+         <jetty.version>${cdh.jetty9.version}</jetty.version>
+         <apache.jsp.version>8.0.33</apache.jsp.version>
 
          <jline.version>${cdh.jline.version}</jline.version>
          <junit.version>4.11</junit.version>
