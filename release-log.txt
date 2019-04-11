@@ -1,5 +1,6 @@
 -- Oozie 5.2.0 release (trunk - unreleased)
 
+OOZIE-3466 Migrate from com.google.common.io.Closeables to org.apache.commons.io.IOUtils (asalamon74 via kmarton)
 OOZIE-3312 Add support for HSTS (kmarton via asalamon74)
 OOZIE-3409 Oozie Server : Memory leak in EL evaluation (asalamon74 via kmarton)
 OOZIE-3438 Copy only apache-jsp server dependencies to distro (asalamon74 via kmarton)
