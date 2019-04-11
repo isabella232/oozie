@@ -29,6 +29,7 @@ import java.io.Writer;
 import java.net.URI;
 import java.security.PrivilegedExceptionAction;
 import java.text.SimpleDateFormat;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
@@ -961,7 +962,7 @@ public class TestJavaActionExecutor extends ActionExecutorTestCase {
 
         byte[] secKey = credentials.getSecretKey(new Text(InsertTestToken.DUMMY_SECRET_KEY));
         assertNotNull(secKey);
-        assertEquals(InsertTestToken.DUMMY_SECRET_KEY, new String(secKey, "UTF-8"));
+        assertEquals(InsertTestToken.DUMMY_SECRET_KEY, new String(secKey, StandardCharsets.UTF_8.name()));
     }
 
 

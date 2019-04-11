@@ -29,12 +29,12 @@ import java.io.Writer;
 import java.lang.management.ManagementFactory;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.google.common.base.Charsets;
 import org.apache.hadoop.security.authentication.client.AuthenticatedURL;
 import org.apache.hadoop.security.authentication.client.AuthenticationException;
 import org.apache.hadoop.security.authentication.client.Authenticator;
@@ -219,7 +219,7 @@ public class AuthOozieClient extends XOozieClient {
         if (AUTH_TOKEN_CACHE_FILE.exists()) {
             try {
                 BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(AUTH_TOKEN_CACHE_FILE),
-                        Charsets.UTF_8));
+                        StandardCharsets.UTF_8));
                 String line = reader.readLine();
                 reader.close();
                 if (line != null) {
@@ -249,7 +249,7 @@ public class AuthOozieClient extends XOozieClient {
                     new File(System.getProperty("user.home")));
             // just to be safe, if something goes wrong delete tmp file eventually
             tmpTokenFile.deleteOnExit();
-            Writer writer = new OutputStreamWriter(new FileOutputStream(tmpTokenFile), Charsets.UTF_8);
+            Writer writer = new OutputStreamWriter(new FileOutputStream(tmpTokenFile), StandardCharsets.UTF_8);
             writer.write(authToken.toString());
             writer.close();
             Files.move(tmpTokenFile.toPath(), AUTH_TOKEN_CACHE_FILE.toPath(), StandardCopyOption.ATOMIC_MOVE);

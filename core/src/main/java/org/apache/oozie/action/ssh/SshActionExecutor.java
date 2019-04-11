@@ -24,11 +24,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
 
-import com.google.common.base.Charsets;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.hadoop.util.StringUtils;
 
@@ -536,9 +536,9 @@ public class SshActionExecutor extends ActionExecutor {
         }
         try {
             IOUtils.copyCharStream(IOUtils.getResourceAsReader("ssh-base.sh", -1), new OutputStreamWriter(
-                    new FileOutputStream(dirLocation + "/ssh-base.sh"), Charsets.UTF_8));
+                    new FileOutputStream(dirLocation + "/ssh-base.sh"), StandardCharsets.UTF_8));
             IOUtils.copyCharStream(IOUtils.getResourceAsReader("ssh-wrapper.sh", -1), new OutputStreamWriter(
-                    new FileOutputStream(dirLocation + "/ssh-wrapper.sh"), Charsets.UTF_8));
+                    new FileOutputStream(dirLocation + "/ssh-wrapper.sh"), StandardCharsets.UTF_8));
         }
         catch (IOException ie) {
             throw new RuntimeException(XLog.format("Not able to copy required scripts file to {0} "
@@ -755,8 +755,8 @@ public class SshActionExecutor extends ActionExecutor {
 
         boolean processEnded = false;
 
-        try (final BufferedReader ir = new BufferedReader(new InputStreamReader(p.getInputStream(), Charsets.UTF_8));
-             final BufferedReader er = new BufferedReader(new InputStreamReader(p.getErrorStream(), Charsets.UTF_8))) {
+        try (final BufferedReader ir = new BufferedReader(new InputStreamReader(p.getInputStream(), StandardCharsets.UTF_8));
+             final BufferedReader er = new BufferedReader(new InputStreamReader(p.getErrorStream(), StandardCharsets.UTF_8))) {
             // Here we do some kind of busy waiting, checking whether the process has finished by calling Process#exitValue().
             // If not yet finished, an IllegalThreadStateException is thrown and ignored, the progress on stdout and stderr read,
             // and retried until the process has ended.
