@@ -89,6 +89,7 @@
          <hive.jline.version>${cdh.jline.version}</hive.jline.version>
          <hive.classifier></hive.classifier>
          <pig.version>${cdh.pig.version}</pig.version>
+         <jython.version>${cdh.jython.version}</jython.version>
          <sqoop.version>${cdh.sqoop.version}</sqoop.version>
          <spark.streaming.kafka.version>${cdh.spark.version}</spark.streaming.kafka.version>
          <spark.bagel.version>${cdh.spark.version}</spark.bagel.version>
@@ -1403,7 +1404,7 @@
             <dependency>
                 <groupId>org.python</groupId>
                 <artifactId>jython-standalone</artifactId>
-                <version>2.7.1</version>
+                <version>${jython.version}</version>
             </dependency>
 
             <dependency>
