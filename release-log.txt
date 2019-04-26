@@ -1,5 +1,6 @@
 -- Oozie 5.2.0 release (trunk - unreleased)
 
+OOZIE-3478 Oozie needs execute permission on the submitting users home directory (asalamon74 via gezapeti, pbacsko, kmarton)
 OOZIE-3365 Workflow and coordinator action status remains RUNNING after rerun (satishsaley)
 OOZIE-3463 Migrate from com.google.common.base.Charsets to java.nio.charset.StandardCharsets (nobigo via kmarton)
 OOZIE-3467 Migrate from com.google.common.base.Stopwatch (asalamon74 via kmarton)
