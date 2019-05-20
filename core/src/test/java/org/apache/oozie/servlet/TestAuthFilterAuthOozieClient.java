@@ -37,8 +37,16 @@ import org.apache.oozie.util.IOUtils;
 
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.io.Writer;
+import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -222,7 +230,8 @@ public class TestAuthFilterAuthOozieClient extends XTestCase {
             }
         }, conf);
         assertTrue(AuthOozieClient.AUTH_TOKEN_CACHE_FILE.exists());
-        String currentCache = IOUtils.getReaderAsString(new FileReader(AuthOozieClient.AUTH_TOKEN_CACHE_FILE), -1);
+        String currentCache = IOUtils.getReaderAsString(new InputStreamReader(new FileInputStream(AuthOozieClient.AUTH_TOKEN_CACHE_FILE),
+                StandardCharsets.UTF_8), -1);
 
         //re-using cache
         setSystemProperty("oozie.auth.token.cache", "true");
@@ -235,7 +244,8 @@ public class TestAuthFilterAuthOozieClient extends XTestCase {
             }
         }, conf);
         assertTrue(AuthOozieClient.AUTH_TOKEN_CACHE_FILE.exists());
-        String newCache = IOUtils.getReaderAsString(new FileReader(AuthOozieClient.AUTH_TOKEN_CACHE_FILE), -1);
+        String newCache = IOUtils.getReaderAsString(new InputStreamReader(new FileInputStream(AuthOozieClient.AUTH_TOKEN_CACHE_FILE),
+                StandardCharsets.UTF_8), -1);
         assertEquals(currentCache, newCache);
 
         //re-using cache with token that will expire within 5 minutes
@@ -250,7 +260,8 @@ public class TestAuthFilterAuthOozieClient extends XTestCase {
             }
         }, conf);
         assertTrue(AuthOozieClient.AUTH_TOKEN_CACHE_FILE.exists());
-        newCache = IOUtils.getReaderAsString(new FileReader(AuthOozieClient.AUTH_TOKEN_CACHE_FILE), -1);
+        newCache = IOUtils.getReaderAsString(new InputStreamReader(new FileInputStream(AuthOozieClient.AUTH_TOKEN_CACHE_FILE),
+                StandardCharsets.UTF_8), -1);
         assertFalse("Almost expired token should have been updated but was not", currentCache.equals(newCache));
 
         //re-using cache with expired token
@@ -265,7 +276,8 @@ public class TestAuthFilterAuthOozieClient extends XTestCase {
             }
         }, conf);
         assertTrue(AuthOozieClient.AUTH_TOKEN_CACHE_FILE.exists());
-        newCache = IOUtils.getReaderAsString(new FileReader(AuthOozieClient.AUTH_TOKEN_CACHE_FILE), -1);
+        newCache = IOUtils.getReaderAsString(new InputStreamReader(new FileInputStream(AuthOozieClient.AUTH_TOKEN_CACHE_FILE),
+                StandardCharsets.UTF_8), -1);
         assertFalse("Expired token should have been updated but was not", currentCache.equals(newCache));
     }
 
@@ -274,7 +286,8 @@ public class TestAuthFilterAuthOozieClient extends XTestCase {
         authToken.setExpires(expirationTime);
         String signedTokenStr = computeSignature(SECRET.getBytes(StandardCharsets.UTF_8), authToken.toString());
         signedTokenStr = authToken.toString() + "&s=" + signedTokenStr;
-        PrintWriter pw = new PrintWriter(AuthOozieClient.AUTH_TOKEN_CACHE_FILE);
+        PrintWriter pw = new PrintWriter(new OutputStreamWriter(new FileOutputStream(AuthOozieClient.AUTH_TOKEN_CACHE_FILE),
+                StandardCharsets.UTF_8));
         pw.write(signedTokenStr);
         pw.close();
         return signedTokenStr;
@@ -283,7 +296,7 @@ public class TestAuthFilterAuthOozieClient extends XTestCase {
     // Borrowed from org.apache.hadoop.security.authentication.util.Signer#computeSignature
     private static String computeSignature(byte[] secret, String str) throws NoSuchAlgorithmException {
         MessageDigest md = MessageDigest.getInstance("SHA");
-        md.update(str.getBytes());
+        md.update(str.getBytes(StandardCharsets.UTF_8));
         md.update(secret);
         byte[] digest = md.digest();
         return new Base64(0).encodeToString(digest);

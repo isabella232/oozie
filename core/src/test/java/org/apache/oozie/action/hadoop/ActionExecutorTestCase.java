@@ -59,7 +59,7 @@ import org.apache.oozie.workflow.lite.StartNodeDef;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
@@ -69,6 +69,7 @@ import java.io.StringReader;
 import java.io.Writer;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -343,7 +344,8 @@ public abstract class ActionExecutorTestCase extends XHCatTestCase {
 
     private void writeToFile(String content, Path appPath, String fileName) throws IOException {
         FileSystem fs = getFileSystem();
-        Writer writer = new OutputStreamWriter(fs.create(new Path(appPath, fileName), true));
+        Writer writer = new OutputStreamWriter(fs.create(new Path(appPath, fileName), true),
+                StandardCharsets.UTF_8);
         writer.write(content);
         writer.close();
     }
@@ -352,7 +354,7 @@ public abstract class ActionExecutorTestCase extends XHCatTestCase {
         final File wf = new File(URI.create(appPath));
         PrintWriter out = null;
         try {
-            out = new PrintWriter(new FileWriter(wf));
+            out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(wf), StandardCharsets.UTF_8));
             out.println(appXml);
         }
         catch (final IOException iex) {
@@ -389,7 +391,8 @@ public abstract class ActionExecutorTestCase extends XHCatTestCase {
             throw new IOException("Workflow ID file does not exist: " + wfIDFile.toString());
         }
 
-        try (final BufferedReader reader = new BufferedReader(new InputStreamReader(fs.open(wfIDFile)))) {
+        try (final BufferedReader reader =
+                     new BufferedReader(new InputStreamReader(fs.open(wfIDFile) ,StandardCharsets.UTF_8))) {
             final String line = reader.readLine();
             JobID.forName(line);
             final String jobID = line;
