@@ -1,5 +1,6 @@
 -- Oozie 5.2.0 release (trunk - unreleased)
 
+OOZIE-3490 [Java 11] Remove com.sun:tools dependency from core module (kmarton via asalamon74)
 OOZIE-3485 [Java 11] Update Maven Surefire Plugin to 2.22.2 (kmarton via asalamon74)
 OOZIE-3478 Oozie needs execute permission on the submitting users home directory (asalamon74 via gezapeti, pbacsko, kmarton)
 OOZIE-3365 Workflow and coordinator action status remains RUNNING after rerun (satishsaley)
