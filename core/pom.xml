@@ -577,6 +577,11 @@
             <artifactId>annotations</artifactId>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>org.cloudera.logredactor</groupId>
+            <artifactId>logredactor</artifactId>
+            <version>${cdh.logredactor.version}</version>
+        </dependency>
     </dependencies>
 
     <build>
