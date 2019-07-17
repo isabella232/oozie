@@ -1,5 +1,6 @@
 -- Oozie 5.2.0 release (trunk - unreleased)
-
+OOZIE-3397 amend Improve logging in NotificationXCommand (asalamon74 via andras.piros)
+OOZIE-3397 Improve logging in NotificationXCommand (kmarton)
 OOZIE-3478 Oozie needs execute permission on the submitting users home directory (asalamon74 via gezapeti, pbacsko, kmarton)
 OOZIE-3365 Workflow and coordinator action status remains RUNNING after rerun (satishsaley)
 OOZIE-3438 Copy only apache-jsp server dependencies to distro (asalamon74 via kmarton)
