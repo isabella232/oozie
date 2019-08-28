@@ -22,7 +22,7 @@
     <parent>
         <artifactId>oozie-main</artifactId>
         <groupId>org.apache.oozie</groupId>
-        <version>5.1.0-cdh6.2.x-SNAPSHOT</version>
+        <version>5.1.0-cdh6.2.1</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
