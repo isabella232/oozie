@@ -1,4 +1,6 @@
 -- Oozie 5.2.0 release (trunk - unreleased)
+
+OOZIE-3543 Upgrade quartz to 2.3.1 (matijhs via asalamon74)
 OOZIE-3397 amend Improve logging in NotificationXCommand (asalamon74 via andras.piros)
 OOZIE-3397 Improve logging in NotificationXCommand (kmarton)
 OOZIE-3490 [Java 11] Remove com.sun:tools dependency from core module (kmarton via asalamon74)
