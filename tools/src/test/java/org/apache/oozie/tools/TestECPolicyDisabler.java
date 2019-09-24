@@ -94,6 +94,16 @@ public class TestECPolicyDisabler  {
     }
 
     @Test
+    public void testServerNotSupportsGetErasureCodingPolicyMethod() throws IOException{
+        MockDistributedFileSystem fs = mock(MockDistributedFileSystem.class);
+        when(fs.getErasureCodingPolicy(any(Path.class))).thenThrow(createNoSuchMethodException());
+        ECPolicyDisabler.Result result = ECPolicyDisabler.check(fs, mock(Path.class));
+        assertEquals("result is expected", Result.NO_SUCH_METHOD, result);
+        verify(fs).getErasureCodingPolicy(any(Path.class));
+        verifyNoMoreInteractions(fs);
+    }
+
+    @Test
     public void testOtherRuntimeExceptionThrown() throws IOException {
         MockDistributedFileSystem fs = mock(MockDistributedFileSystem.class);
         when(fs.getErasureCodingPolicy(any())).thenReturn(otherErasureCoding());
